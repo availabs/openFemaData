@@ -1,0 +1,12 @@
+[submodule "src/components/dms"]
+	path = src/components/dms
+	url = https://github.com/availabs/dms.git
+[submodule "src/components/avl-components"]
+	path = src/components/avl-components
+	url = https://github.com/availabs/avl-components.git
+[submodule "src/componenets/dms"]
+	path = src/componenets/dms
+	url = https://github.com/availabs/dms.git
+[submodule "src/componenets/avl-components"]
+	path = src/componenets/avl-components
+	url = https://github.com/availabs/avl-components.git
