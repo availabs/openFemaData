@@ -1,22 +1,24 @@
-const pageElement = {
-  app: "ctp",
-  type: "page-element",
-  attributes: [
-    {
-      key: "element-type",
-      type: "text"
-    },
-    {
-      key: "element-data",
-      type: "text"
-    }
-  ]
-} 
+import SectionDisplayComp from "./components/SectionDisplayComp"
+
+// const pageElement = {
+//   app: "meta",
+//   type: "page-element",
+//   attributes: [
+//     {
+//       key: "element-type",
+//       type: "text"
+//     },
+//     {
+//       key: "element-data",
+//       type: "text"
+//     }
+//   ]
+// }
 
 const pageSection = {
-  app: "ctp",
+  app: "hazard-methods",
   type: "page-section",
-  registerFormats: [pageElement],
+  // registerFormats: [pageElement],
   attributes: [
       { key: "title",
         type: "text"
@@ -28,23 +30,23 @@ const pageSection = {
       { key: "element",
         type: "type-select",
         attributes: [
-          { key: "WSYWIG",
+          { key: "Draft Editor",
             type: "richtext"
           },
           { key: "Simple Text",
             type: "text"
           },
-          { 
-            key: "Asset Table",
-            type: "asset-table",
+          { key: "Asset Table",
+            type: "asset-table"
           }
         ]
       }
+
   ]
 }
 
 const metaDoc = {
-  app: "ctp",
+  app: "hazard-methods",
   type: "doc-page",
   registerFormats: [pageSection],
   attributes: [
@@ -60,7 +62,7 @@ const metaDoc = {
       editable: false,
       hidden: true
     },
-    { 
+    {
       key: "index",
       type: "number",
       default: "props:index",
@@ -83,10 +85,11 @@ const metaDoc = {
     {
       key: 'sections',
       type: "dms-format",
-      format: "ctp+page-section",
+      format: "hazard-methods+page-section",
       isArray: true,
       useOrdered: true,
-      showControls: false
+      showControls: false,
+      DisplayComp: SectionDisplayComp
     }
   ]
 }
@@ -94,6 +97,5 @@ const metaDoc = {
 export {
   metaDoc,
   pageSection,
-  pageElement
+  // pageElement
 }
-

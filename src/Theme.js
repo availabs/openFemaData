@@ -41,7 +41,7 @@ const light_base = {
     navMenuItem: 'hover:font-medium cursor-pointer px-2 py-1 text-lg font-semibold',
 
 
-    bg: 'bg-white',
+    bg: 'bg-gray-100',
     sidebarBg: 'bg-darkblue-500',
     sidebarW: '56',
     sidebarBorder: ' border-r border-gray-200',

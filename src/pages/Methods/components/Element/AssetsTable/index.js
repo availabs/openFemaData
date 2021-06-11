@@ -23,14 +23,13 @@ Edit.settings = {
 
 const View = ({value}) => {
     if (!value) return false
-    let data = value['element-data']
-
+    console.log('Asset Table VIew', value,value)
+    
     return (
-        <pre className='relative w-full border border-dashed p-1'>
-            {data}
+        <pre className='relative w-full p-1'>
             <AssetsTable
                 viewOnly={true}
-                value={ data }
+                value={ value }
             />
         </pre>
     )

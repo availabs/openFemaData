@@ -8,7 +8,7 @@ const Layout = ({children}) => {
 	  	<div className={`flex items-start flex-col min-h-screen`}>
             <div className='w-full fixed bg-white z-10'>
 		  		<TopNav
-		  			logo={<div className='text-gray-50 px-4 text-sm font-medium'>HAZARD DATA</div>}
+		  			logo={<div className='text-gray-200 px-4 text-sm font-medium'>HAZARD DATA</div>}
 		  			menuItems={[
 		    			
 		    			{
@@ -20,18 +20,15 @@ const Layout = ({children}) => {
 			            },
 		    			{
 			                name: 'Methodology',
-			                path: `/p/`,
+			                path: `/methods`,
 			                //icon: 'fa fa-edit',
 			                className: 'font-medium text-lg'
 			            },
 		    		]}
 		    	/>
 		    </div>
-		    
-            <div className={`w-full hasValue flex-1 mt-12 bg-gray-100`}>
-		    	
-	    			{children}
-	    		
+            <div className={`w-full hasValue flex-1 mt-12 bg-gray-100 flex`}>
+	    		{children}
 	    	</div>
 		</div>
 	)

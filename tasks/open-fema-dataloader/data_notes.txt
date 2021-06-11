@@ -1,0 +1,16 @@
+Notes for fema 
+
+
+dataset fema_web_disaster_summaries_v1
+
+table metadata has column
+	
+	total_obligated_amount_category_ab
+
+but actual data has colume
+
+	total_obligated_amount_cat_ab
+
+dataset hazard_mitigation_assistance_mitigated_properties_v2
+
+    table metadata has colume 'ID' (uppercase) but actual data is 'id' (lowercase)

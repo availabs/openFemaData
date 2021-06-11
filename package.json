@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@availabs/ams": "^1.0.9",
-    "@availabs/avl-components": "^1.0.58",
+    "@availabs/avl-components": "^1.0.66",
     "@draft-js-plugins/editor": "^4.1.0",
     "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/react": "^11.2.6",
@@ -60,7 +60,11 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.2.5",
+    "bluebird": "^3.7.2",
+    "node-fetch": "^2.6.1",
+    "pg": "^8.6.0",
     "postcss": "^8.2.9",
+    "sql": "^0.78.0",
     "tailwindcss": "^2.1.1"
   }
 }

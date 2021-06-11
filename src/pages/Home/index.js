@@ -89,11 +89,11 @@ const Home = ({ falcor, falcorCache, ...props }) => {
     return (
       <AdminLayout>
 	  		<div className="w-full max-w-7xl mx-auto">
-	  			<div className='pt-4 pb-3'>
+	  			<div className='pt-4 pb-3 px-6'>
           			<h3 className='inline font-bold text-3xl'>Home</h3>
         		</div>
         		<div className='pt-4 pb-3 px-4 bg-white'>
-        		<div className='p-2'>{JSON.stringify(data.disasters[0])}</div>
+        		{/*<div className='p-2'>{JSON.stringify(data.disasters[0])}</div>*/}
         		<div className='p-2'>TYPES:{JSON.stringify(data.disasterTypes)}</div>
         		</div>
           		{data.disasters

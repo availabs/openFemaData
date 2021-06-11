@@ -1,0 +1,178 @@
+SELECT
+disaster_number,
+
+sum(ihp_amount),
+sum(fip_amount),
+sum(ha_amount),
+sum(on_a_amount),
+sum(flood_damage_amount),
+sum(foundation_damage_amount),
+sum(roof_damage_amount),
+sum(repair_amount),
+sum(replacement_amount),
+sum(personal_property_amount)
+FROM fema_disasters.individual_and_households_programs_valid_registration
+group by 1
+
+----------------
+
+-- SELECT disaster_number, state, county, city, zip_code, valid_registrations, average_fema_inspected_damage, total_inspected, total_damage, no_fema_inspected_damage, fema_inspected_damage_between1and10000, fema_inspected_damage_between10001and20000, fema_inspected_damage_between20001and30000, fema_inspected_damage_greater_than30000, approved_for_fema_assistance, total_approved_ihp_amount, repair_replace_amount, rental_amount, other_needs_amount, approved_between1and10000, approved_between10001and25000, approved_between25001andmax, total_max_grants, id
+-- 	FROM fema_disasters.housing_assistance_program_data_owners_v2
+-- 	where disa;
+select * from 
+(SELECT 
+disaster_number,
+'owner' as data_type
+sum(valid_registrations) as count_registered,
+sum(total_inspected) as count_inspected,
+sum(total_damage) as damage,
+sum(total_approved_ihp_amount) as ihp_total,
+sum(repair_replace_amount) as repair_replace_total,
+sum(rental_amount) as rental_total,
+sum(other_needs_amount) as ona_total
+FROM fema_disasters.housing_assistance_program_data_owners_v2
+
+group by 1
+union
+SELECT 
+disaster_number,
+'renter' as data_type,
+sum(valid_registrations) as count_registered,
+sum(total_inspected) as count_inspected,
+sum(0) as damage,
+sum(total_approved_ihp_amount) as ihp_total,
+sum(repair_replace_amount) as repair_replace_total,
+sum(rental_amount) as rental_total,
+sum(other_needs_amount) as ona_total,
+-- sum(total_approved_ihp_amount - other_needs_amount ) as ha_total,
+-- sum((total_approved_ihp_amount - other_needs_amount) - (rental_amount+repair_replace_amount)) as ha_diff
+FROM fema_disasters.housing_assistance_renters_v2
+
+group by 1) as q
+
+-------------------
+
+-- SELECT disaster_number, state, county, city, zip_code, valid_registrations, average_fema_inspected_damage, total_inspected, total_damage, no_fema_inspected_damage, fema_inspected_damage_between1and10000, fema_inspected_damage_between10001and20000, fema_inspected_damage_between20001and30000, fema_inspected_damage_greater_than30000, approved_for_fema_assistance, total_approved_ihp_amount, repair_replace_amount, rental_amount, other_needs_amount, approved_between1and10000, approved_between10001and25000, approved_between25001andmax, total_max_grants, id
+-- 	FROM fema_disasters.housing_assistance_program_data_owners_v2
+-- 	where disa;
+select 
+	q.disaster_number,
+	sum(q.ihp_total) as ihp_total,
+	avg(a.total_amount_ihp_approved) as summary_ihp_total,
+	((avg(a.total_amount_ihp_approved)-sum(q.ihp_total))/avg(a.total_amount_ihp_approved))*100 as ihp_pct_diff,
+	sum(ona_total) as ona_total, 
+	avg(a.total_amount_ona_approved) as summary_ona_total,
+	sum(ihp_total-ona_total) as ha_total,
+	avg(a.total_amount_ha_approved) as summary_ha_total,
+	sum(rental_total) as rental_total,
+	sum(repair_replace_total) as repair_replace_total
+from 
+	(SELECT 
+	disaster_number::int,
+	'owner' as data_type,
+	sum(valid_registrations) as count_registered,
+	sum(total_inspected) as count_inspected,
+	sum(total_damage) as damage,
+	sum(total_approved_ihp_amount) as ihp_total,
+	sum(repair_replace_amount) as repair_replace_total,
+	sum(rental_amount) as rental_total,
+	sum(other_needs_amount) as ona_total
+	FROM fema_disasters.housing_assistance_program_data_owners_v2
+	group by 1
+	union
+	SELECT 
+	disaster_number::int,
+	'renter' as data_type,
+	sum(valid_registrations) as count_registered,
+	sum(total_inspected) as count_inspected,
+	sum(0) as damage,
+	sum(total_approved_ihp_amount) as ihp_total,
+	sum(repair_replace_amount) as repair_replace_total,
+	sum(rental_amount) as rental_total,
+	sum(other_needs_amount) as ona_total
+	-- sum(total_approved_ihp_amount - other_needs_amount ) as ha_total,
+	-- sum((total_approved_ihp_amount - other_needs_amount) - (rental_amount+repair_replace_amount)) as ha_diff
+	FROM fema_disasters.housing_assistance_renters_v2
+	group by 1) as q
+	join fema_disasters.fema_web_disaster_summaries as a on a.disaster_number = q.disaster_number 
+group by 1
+order by ihp_total desc
+
+--------------------------
+
+-- SELECT incident_type, declaration_date, disaster_number, county, damaged_state_abbreviation, damaged_city, damaged_zip_code, applicant_age, household_composition, occupants_under_two, occupants_2to5, occupants_6to18, occupants_19to64, occupants_65andover, gross_income, own_rent, primary_residence, residence_type, home_owners_insurance, flood_insurance, registration_method, ihp_referral, ihp_eligible, ihp_amount, fip_amount, ha_referral, ha_eligible, ha_amount, ha_status, on_a_referral, on_a_eligible, on_a_amount, utilities_out, home_damage, auto_damage, emergency_needs, food_need, shelter_need, access_functional_needs, sba_eligible, sba_approved, in_spn_issued, in_spn_returned, habitability_repairs_required, rpfvl, ppfvl, renter_damage_level, destroyed, water_level, high_water_location, flood_damage, flood_damage_amount, foundation_damage, foundation_damage_amount, roof_damage, roof_damage_amount, tsa_eligible, tsa_checkedin, rental_assistance_eligible, rental_assistance_amount, repair_assistance_eligible, repair_amount, replacement_assistance_eligible, replacement_amount, personal_property_eligible, personal_property_amount, ihp_max, ha_max, on_a_max, last_refresh, id, geoid
+-- 	FROM fema_disasters.individual_and_households_programs_valid_registration;
+
+SELECT
+disaster_number,
+ha_status,
+destroyed,
+count(1),
+--sum(ihp_amount),
+(sum(fip_amount)/10000)::int as insurance,
+(sum(on_a_amount)/10000)::int as ona_amount,
+(sum(ihp_amount)/10000)::int as ihp_amount,
+(sum(ha_amount+ on_a_amount)/10000)::int as ihp_sum,
+(sum(ha_amount)/10000)::int as ha_amount,
+
+(sum(ha_amount+ fip_amount)/10000)::int - (sum(rental_assistance_amount + repair_amount + replacement_amount + personal_property_amount)/10000)::int as ha_diff,
+
+(sum(rental_assistance_amount + flood_damage_amount + foundation_damage_amount + roof_damage_amount + repair_amount + replacement_amount + personal_property_amount)/10000)::int as damage_total,
+(sum(repair_amount + replacement_amount)/10000)::int as damage_rep,
+(sum(flood_damage_amount + foundation_damage_amount + roof_damage_amount)/10000)::int as damage_obs,
+(sum(flood_damage_amount)/10000)::int as flood,
+(sum(foundation_damage_amount)/10000)::int as foundation,
+(sum(roof_damage_amount)/10000)::int as roof,
+(sum(repair_amount)/10000)::int as repair,
+(sum(replacement_amount)/10000)::int as replacement,
+(sum(personal_property_amount)/10000)::int as property,
+(sum(rental_assistance_amount)/10000)::int as rental
+
+FROM fema_disasters.individual_and_households_programs_valid_registration
+where disaster_number = '1603'
+group by 1,2,3
+order by 4 desc
+
+SELECT
+disaster_number,
+damaged_zip_code,
+ha_status,
+ha_amount,
+
+ha_amount - (rental_assistance_amount+repair_amount+replacement_amount+personal_property_amount) as ha_diff,
+ha_amount - (rental_assistance_amount) as ha_no_rent,
+(rental_assistance_amount+repair_amount+replacement_amount+personal_property_amount) as payments,
+sba_approved,
+(repair_amount+replacement_amount+personal_property_amount) as non_rent_payments,
+flood_insurance,
+home_owners_insurance,
+flood_damage_amount,
+foundation_damage_amount,
+roof_damage_amount,
+repair_amount,
+replacement_amount,
+rpfvl,
+personal_property_amount,
+ppfvl,
+rental_assistance_amount,
+fip_amount
+-- on_a_amount,
+-- ha_amount,
+-- ihp_amount,
+-- ha_amount + on_a_amount as ihp_sum
+FROM fema_disasters.individual_and_households_programs_valid_registration
+where disaster_number = '1603' and damaged_zip_code = '70072'
+
+-------------------
+
+
+SELECT 
+disaster_number,
+sum(sum(total_inspected),
+sum(total_damage),
+sum(total_approved_ihp_amount),
+sum(repair_replace_amount),
+sum(rental_amount),
+sum(other_needs_amount),
+FROM fema_disasters.housing_assistance_program_data_owners_v2
+group by 1

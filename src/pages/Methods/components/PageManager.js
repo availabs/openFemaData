@@ -22,7 +22,7 @@ const reducer = (state, action) => {
       };
     case "close":
       return { ...state, [action.id]: "closed" };
-    default: 
+    default:
       return { ...state, [action.id]: "closed" };
   }
 }
@@ -60,6 +60,12 @@ export default ({ dataItems=[], interact, ...props }) => {
 
   const [state, dispatch] = React.useReducer(reducer, {});
 
+  const nextIndex = dataItems
+    .filter(d => d.data.sectionLanding)
+    .reduce((a, c) => {
+      return Math.max(a, +get(c, ["data", "index"], 0))
+    }, -1) + 1;
+
   return (
     <Layout>
       <div className="w-full max-w-7xl mx-auto p-2">
@@ -74,7 +80,13 @@ export default ({ dataItems=[], interact, ...props }) => {
             action={ {
               disabled: !Boolean(newSectionTitle),
               action: 'api:create',
-              seedProps: () => ({ section: newSectionTitle, sectionLanding: true })
+              seedProps: () => (
+                { section: newSectionTitle,
+                  sectionLanding: true,
+                  index: nextIndex,
+                  showSidebar: true
+                }
+              )
             } }/>
         </div>
         <div className='pt-4'>
