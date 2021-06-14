@@ -40,9 +40,9 @@ function updateChunks(source) {
 	const [schema,table] = source.table.split('.')
 	const sql_table = sql.define(tables[table])
 
-	console.log(sql_table.create().toQuery())
+	//console.log(sql_table.create().toQuery())
 	//console.log('source', source)
-
+	//return 
 	for(let i=0; i < source.record_count; i+=1000){
 		skips.push(i)
 	}
@@ -62,7 +62,7 @@ function updateChunks(source) {
 					},{})
 					
 				},{})
-				//console.log(newData[0])
+				console.log(newData[0])
 				Promise.all(
 					arrayChunk(newData,500)
 					//.filter((k,i) => i < 1)

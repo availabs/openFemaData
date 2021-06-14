@@ -1031,362 +1031,77 @@ module.exports = {
       "name": "individuals_and_households_program_valid_registrations_v1",
       "schema": "open_fema_data",
       "columns": [
-          {
-            "name": "id",
-            "dataType": "text",
-            "primaryKey": true
-         },
-         {
-            "name": "fip_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "occupants65and_over",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "county",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "food_need",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "shelter_need",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "flood_damage_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "utilities_out",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "inspn_returned",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "roof_damage",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "home_damage",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "ha_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "sba_approved",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "sba_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "occupants19to64",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "damaged_zip_code",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "ihp_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "roof_damage_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "ona_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "disaster_number",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "registration_method",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "emergency_needs",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "auto_damage",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "occupants2to5",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "own_rent",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "foundation_damage_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "ppfvl",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "declaration_date",
-            "dataType": "timestamp with time zone",
-            "primaryKey": false
-         },
-         {
-            "name": "high_water_location",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "water_level",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "primary_residence",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "home_owners_insurance",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "inspn_issued",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "gross_income",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "residence_type",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "renter_damage_level",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "access_functional_needs",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "ha_status",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "ona_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "flood_insurance",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "occupants6to18",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "foundation_damage",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "incident_type",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "applicant_age",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "destroyed",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "ha_referral",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "ihp_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "ha_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "household_composition",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "ona_referral",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "occupants_under_two",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "ihp_referral",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "damaged_state_abbreviation",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "habitability_repairs_required",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "rpfvl",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "tsa_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "flood_damage",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "tsa_checked_in",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "rental_assistance_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "rental_assistance_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "ha_max",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "repair_assistance_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "ona_max",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "replacement_assistance_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "ihp_max",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "repair_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "personal_property_eligible",
-            "dataType": "boolean",
-            "primaryKey": false
-         },
-         {
-            "name": "personal_property_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-         {
-            "name": "replacement_amount",
-            "dataType": "numeric",
-            "primaryKey": false
-         },
-        
-         {
-            "name": "damaged_city",
-            "dataType": "text",
-            "primaryKey": false
-         },
-         {
-            "name": "last_refresh",
-            "dataType": "timestamp with time zone",
-            "primaryKey": false
-         },
+         {'name':'id', dataType: 'character varying NOT NULL', primaryKey: true},
+         {'name':'incident_type', dataType: 'character varying'},
+         {'name':'declaration_date', dataType: 'date'},
+         {'name':'disaster_number', dataType: 'character varying'},
+         {'name':'county', dataType: 'character varying'},
+         {'name':'damaged_state_abbreviation', dataType: 'character varying'},
+         {'name':'damaged_city', dataType: 'character varying'},
+         {'name':'damaged_zip_code', dataType: 'character varying'},
+         {'name':'applicant_age', dataType: 'character varying'},
+         {'name':'household_composition', dataType: 'character varying'},
+         {'name':'occupants_under_two', dataType: 'character varying'},
+         {'name':'occupants2to5', dataType: 'character varying'},
+         {'name':'occupants6to18', dataType: 'character varying'},
+         {'name':'occupants19to64', dataType: 'character varying'},
+         {'name':'occupants65and_over', dataType: 'character varying'},
+         {'name':'gross_income', dataType: 'character varying'},
+         {'name':'own_rent', dataType: 'character varying'},
+         {'name':'primary_residence', dataType: 'boolean'},
+         {'name':'residence_type', dataType: 'character varying'},
+         {'name':'home_owners_insurance', dataType: 'boolean'},
+         {'name':'flood_insurance', dataType: 'boolean'},
+         {'name':'registration_method', dataType: 'character varying'},
+         {'name':'ihp_referral', dataType: 'boolean'},
+         {'name':'ihp_eligible', dataType: 'boolean'},
+         {'name':'ihp_amount', dataType: 'double precision'},
+         {'name':'fip_amount', dataType: 'double precision'},
+         {'name':'ha_referral', dataType: 'boolean'},
+         {'name':'ha_eligible', dataType: 'boolean'},
+         {'name':'ha_amount', dataType: 'double precision'},
+         {'name':'ha_status', dataType: 'character varying'},
+         {'name':'ona_referral', dataType: 'boolean'},
+         {'name':'ona_eligible', dataType: 'boolean'},
+         {'name':'ona_amount', dataType: 'double precision'},
+         {'name':'utilities_out', dataType: 'boolean'},
+         {'name':'home_damage', dataType: 'boolean'},
+         {'name':'auto_damage', dataType: 'boolean'},
+         {'name':'emergency_needs', dataType: 'boolean'},
+         {'name':'food_need', dataType: 'boolean'},
+         {'name':'shelter_need', dataType: 'boolean'},
+         {'name':'access_functional_needs', dataType: 'boolean'},
+         {'name':'sba_eligible', dataType: 'boolean'},
+         {'name':'sba_approved', dataType: 'boolean'},
+         {'name':'inspn_issued', dataType: 'boolean'},
+         {'name':'inspn_returned', dataType: 'boolean'},
+         {'name':'habitability_repairs_required', dataType: 'boolean'},
+         {'name':'rpfvl', dataType: 'double precision'},
+         {'name':'ppfvl', dataType: 'double precision'},
+         {'name':'renter_damage_level', dataType: 'character varying'},
+         {'name':'destroyed', dataType: 'boolean'},
+         {'name':'water_level', dataType: 'double precision'},
+         {'name':'high_water_location', dataType: 'character varying'},
+         {'name':'flood_damage', dataType: 'boolean'},
+         {'name':'flood_damage_amount', dataType: 'double precision'},
+         {'name':'foundation_damage', dataType: 'boolean'},
+         {'name':'foundation_damage_amount', dataType: 'double precision'},
+         {'name':'roof_damage', dataType: 'boolean'},
+         {'name':'roof_damage_amount', dataType: 'double precision'},
+         {'name':'tsa_eligible', dataType: 'boolean'},
+         {'name':'tsa_checked_in', dataType: 'boolean'},
+         {'name':'rental_assistance_eligible', dataType: 'boolean'},
+         {'name':'rental_assistance_amount', dataType: 'double precision'},
+         {'name':'repair_assistance_eligible', dataType: 'boolean'},
+         {'name':'repair_amount', dataType: 'double precision'},
+         {'name':'replacement_assistance_eligible', dataType: 'boolean'},
+         {'name':'replacement_amount', dataType: 'double precision'},
+         {'name':'personal_property_eligible', dataType: 'boolean'},
+         {'name':'personal_property_amount', dataType: 'double precision'},
+         {'name':'ihp_max', dataType: 'boolean'},
+         {'name':'ha_max', dataType: 'boolean'},
+         {'name':'ona_max', dataType: 'boolean'},
+         {'name':'last_refresh', dataType: 'date'}
       ]
    },
    "public_assistance_applicants_v1": {
