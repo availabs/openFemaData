@@ -1,48 +1,48 @@
 import React  from "react"
-// import {useTheme} from '@availabs/avl-components'
+ import {useFalcor} from '@availabs/avl-components'
 import { Link } from 'react-router-dom'
 import AdminLayout from '../Layout'
 import get from 'lodash.get'
 
 import { 
 	DISASTER_ATTRIBUTES, 
-	DISASTER_DECLARATIONS_ATTRIBUTES, 
+	// DISASTER_DECLARATIONS_ATTRIBUTES, 
 	fnum 
 } from './utils'
-import { format, precisionPrefix, formatPrefix}  from 'd3-format'
+// import { format, precisionPrefix, formatPrefix}  from 'd3-format'
 
-const Home = ({ falcor, falcorCache, ...props }) => {
-
+const Home = ({  ...props }) => {
+	const {falcor, falcorCache} = useFalcor()
+	//console.log('falcor', falcor,falcorCache)
     // const [geoid, setGeoid] = React.useState(36)
     // const params = useParams();
 
     React.useEffect(() => {
-    	console.time('disastersFetch')
-    	falcor.get(['fema','disasters','length'])
+    	falcor.get(['fema_disasters','length'])
 		  	.then(res => {
-		    	const numDisasters = get(res.json,  ['fema','disasters','length'], 0)
+		    	const numDisasters = get(res.json,  ['fema_disasters','length'], 0)
 		        return falcor.get(
-		        	['fema','disasters','byIndex', {from: 0, to: numDisasters-1 }, DISASTER_ATTRIBUTES]
-		        ).then(d => console.timeEnd('disastersFetch'))
+		        	['fema_disasters','byIndex', {from: 0, to: numDisasters-1 }, DISASTER_ATTRIBUTES ]
+		        ).then(d => {
+		        	console.log('data',d)
+		        })
 		  	});
     }, [falcor]);
 
     React.useEffect(() => {
-    	const disasterNumbers = Object.values(get(falcorCache, ['fema','disasters','byIndex'], {}))
-      		.map(d => get(falcorCache, d.value, {}))
-      		.map(d => get(d, 'disaster_number.value', null))
+    	const disasterNumbers = Object.values(get(falcorCache, ['fema_disasters','byIndex'], {}))
+      		.map(d => get(falcorCache, get(d,'value',[]), {}))
+      		.map(d => get(d, 'disaster_number', null))
       		.filter(d => d)
 
       	if(disasterNumbers.length === 0) { return }
-    	console.time('declarationsFetch')	
-	        return falcor.get(
-	        	['fema','disasters', disasterNumbers, 'declarations', 'length']
+    	    return falcor.get(
+	        	['fema_disasters', disasterNumbers, 'declarations', 'length']
 	        ).then(dec => {
-	        	let declarations = get(dec, ['json','fema', 'disasters'], {})
-	        	let mostDeclarations = Math.max(...Object.keys(declarations)
-	        		.map((k) =>  get(declarations, `${k}.declarations.length`,0)))
-	        	console.timeEnd('declarationsFetch')
-	        	console.time('declarationsFetch2')
+	        	// let declarations = get(dec, ['json','fema_disasters'], {})
+	        	// let mostDeclarations = Math.max(...Object.keys(declarations)
+	        	// 	.map((k) =>  get(declarations, `${k}.declarations.length`,0)))
+
 	        	
 	       	})
       	
@@ -50,21 +50,25 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 
 
     const data =  React.useMemo(() => {
-    	console.time('data processing')
-    	const disasters = Object.values(get(falcorCache, ['fema','disasters','byIndex'], {}))
-      		.map(d => get(falcorCache, d.value, {}))
+    	console.log('data processing', falcorCache)
+    	const disasters = Object.values(get(falcorCache, ['fema_disasters','byIndex'], {}))
+      		// .filter((d,i) => i < 10)
+      		.map(d => {
+      			return get(falcorCache, get(d,'value',[]), {})
+      		})
       		.filter(d => d)
       		.map(d => {
-      			d.numDeclarations =  get(
-      				falcorCache, 
-      				['fema','disasters', get(d, 'disaster_number.value',0), 'declarations', 'length', 'value'], 
-      				0
-      			)
+      			// d.numDeclarations =  get(
+      			// 	falcorCache, 
+      			// 	['fema_disasters', get(d, 'disaster_number',0), 'declarations', 'length'], 
+      			// 	0
+      			// )
       			return d
       		})
 
+      	console.log('disasters', disasters)
      	const disaster_types = disasters.reduce((types,cur) => {
-      		const type = get(cur, 'disaster_type.value',null)
+      		const type = get(cur, 'disaster_type',null)
       		if(!type) {
       			return types
       		}
@@ -75,13 +79,13 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 
       		return types
       	},{})
-     	console.timeEnd('data processing')
+     	// console.timeEnd('data processing')
 	    
 	    return {
-	      	numDisasters: get(falcorCache, ['fema','disasters','length'], 0),
+	      	numDisasters: get(falcorCache, ['fema_disasters','length'], 0),
 	      	disasterTypes: disaster_types,
 	      	disasters: disasters
-	      		.sort((a,b) => get(b, 'total_cost.value', 0) - get(a, 'total_cost.value', 0))
+	      		.sort((a,b) => get(b, 'total_cost', 0) - get(a, 'total_cost', 0))
 	     } 
      
     }, [falcorCache])
@@ -101,32 +105,32 @@ const Home = ({ falcor, falcorCache, ...props }) => {
           			.map((disaster,i) => ( 
           			<div key={i} className={`border-t border-gray-200 bg-white grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-6 sm:divide-y-0 sm:divide-x`}>
 				        <div className={`px-6 py-5 text-sm font-medium text-center`}>
-				          	<Link to={`/disaster/${get(disaster, 'disaster_number.value', 0)}`}>
-					          	<div>{get(disaster, 'name.value', '')}</div>
+				          	<Link to={`/disaster/${get(disaster, 'disaster_number', 0)}`}>
+					          	<div>{get(disaster, 'name', '')}</div>
 					          	<div className='text-xs'>
 					          		<span className='text-gray-500'>DN </span>
-					          		{get(disaster, 'disaster_number.value', '')}
+					          		{get(disaster, 'disaster_number', '')}
 					          	</div>
 					          	<div className='text-xs'>
 					          		<span className='text-gray-500'>Declared </span>
-					          		{get(disaster, 'declaration_date.value', '').split('T')[0]}
+					          		{get(disaster, 'declaration_date', '')/* .split('T')[0]*/}
 					          	</div>
 					          	<div className='text-xs'>
 					          		<span className='text-gray-500'>Type </span>
-					          		{get(disaster, 'disaster_type.value', '')}
+					          		{get(disaster, 'disaster_type', '')}
 					          	</div>
 				          	</Link>
 				        </div>
 				        <div className="px-6 py-5 text-sm font-medium text-center bg-gray-50">
 				            <div className='text-gray-600'>Total</div>
 				            <div className='text-lg'>
-				            	{get(disaster, 'total_cost.value', '').toLocaleString()}
+				            	{(+get(disaster, 'total_cost', '')).toLocaleString()}
 				            </div>
 				            {/*<div className='text-gray-600 text-sm'>check</div>
 			            	<div>	
-			            	{((get(disaster, 'total_amount_ihp_approved.value', 0) || 0)
-			            		 + (get(disaster, 'total_obligated_amount_pa.value', 0) || 0)
-			            		 + (get(disaster, 'total_obligated_amount_hmgp.value', 0) || 0)).toLocaleString()
+			            	{((get(disaster, 'total_amount_ihp_approved', 0) || 0)
+			            		 + (get(disaster, 'total_obligated_amount_pa', 0) || 0)
+			            		 + (get(disaster, 'total_obligated_amount_hmgp', 0) || 0)).toLocaleString()
 			            		}
 			            	</div> */}
 			            	<div className='text-gray-600'>declarations</div>
@@ -138,16 +142,16 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 				        <div className="px-6 py-5 text-sm font-medium text-center">
 				            <div className='text-gray-600'>Total IHP</div>
 				            <div className='text-lg'>
-				            	{ (get(disaster, 'total_amount_ihp_approved.value', '') || '0').toLocaleString()}
+				            	{ (+get(disaster, 'total_amount_ihp_approved', '') || 0).toLocaleString()}
 				            </div>
 				            <div className='flex'>
 				            	<div className='text-lg flex-1'>
 				            		<div className='text-gray-600 text-sm'>Total HA</div>
-				            		{fnum((get(disaster, 'total_amount_ha_approved.value', 0) || 0))}
+				            		{fnum((get(disaster, 'total_amount_ha_approved', 0) || 0))}
 				            	</div>
 				            	<div className='text-lg flex-1'>
 				            		<div className='text-gray-600 text-sm'>Total ONA</div>
-				            		{fnum((get(disaster, 'total_amount_ona_approved.value', 0) || 0))}
+				            		{fnum((get(disaster, 'total_amount_ona_approved', 0) || 0))}
 
 				            	</div>
 				            </div>
@@ -155,23 +159,23 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 				        <div className="px-6 py-5 text-sm font-medium text-center">
 				            <div className='text-gray-600'>Total PA</div>
 				            <div className='text-lg'>
-				            	{ (get(disaster, 'total_obligated_amount_pa.value', '') || '0').toLocaleString()}
+				            	{ (+get(disaster, 'total_obligated_amount_pa', '') || 0).toLocaleString()}
 				            </div>
 				            <div className='text-lg '>
 			            		<div className='text-gray-600 text-sm'>check</div>
-			            		{((get(disaster, 'total_obligated_amount_cat_ab.value', 0) || 0)
-			            		 + (get(disaster, 'total_obligated_amount_cat_c2g.value', 0) || 0)).toLocaleString()
+			            		{((+get(disaster, 'total_obligated_amount_cat_ab', 0) || 0)
+			            		 + (+get(disaster, 'total_obligated_amount_cat_c2g', 0) || 0)).toLocaleString()
 			            		}
 				            </div>
 
 				            <div className='flex'>
 				            	<div className='text-lg flex-1'>
 				            		<div className='text-gray-600 text-sm'>CAT AB</div>
-				            		{fnum((get(disaster, 'total_obligated_amount_cat_ab.value', 0) || 0))}
+				            		{fnum((get(disaster, 'total_obligated_amount_cat_ab', 0) || 0))}
 				            	</div>
 				            	<div className='text-lg flex-1'>
 				            		<div className='text-gray-600 text-sm'>CAT C2G</div>
-				            		{fnum((get(disaster, 'total_obligated_amount_cat_c2g.value', 0) || 0))}
+				            		{fnum((get(disaster, 'total_obligated_amount_cat_c2g', 0) || 0))}
 
 				            	</div>
 				            </div>
@@ -180,7 +184,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 				        <div className="px-6 py-5 text-sm font-medium text-center">
 				            <div className='text-gray-600'>Total HMGP</div>
 				            <div className='text-lg'>
-				            	{ (get(disaster, 'total_obligated_amount_hmgp.value', '') || '0').toLocaleString()}
+				            	{ (+get(disaster, 'total_obligated_amount_hmgp', '') || 0).toLocaleString()}
 				            </div>
 				        </div>
 				        <div className="px-6 py-5 text-sm font-medium text-center">
@@ -199,13 +203,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 export default {
   path: "/",
   exact: true,
-  auth: true,
+  auth: false,
   component: Home,
-  component: {
-    type: Home,
-    wrappers: [
-      "avl-falcor"
-    ]
-  },
   layout: 'Simple'
 }

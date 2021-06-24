@@ -1,7 +1,7 @@
 import React from "react"
 import get from 'lodash.get'
 
-import {TopNav, withAuth} from '@availabs/avl-components'
+import {/*TopNav,*/ withAuth} from '@availabs/avl-components'
 import {SideNav} from 'components/avl-components/src'
 import { Link } from 'react-router-dom'
 
@@ -12,7 +12,7 @@ import Layout from 'pages/Layout'
 
 import SectionView from "./SectionViewNew"
 
-import logo from './Logo.js'
+// import logo from './Logo.js'
 
 const View = withAuth(({item, dataItems, user, ...props}) => {
 
@@ -48,8 +48,8 @@ const View = withAuth(({item, dataItems, user, ...props}) => {
             }
         })
     let activePage = props['doc-page'] || item
-    let subNav = data.sectionLanding ? get(navItems.filter((data) => (data.id === get(activePage, `id`))), `[0].subMenus`, []) :
-        get(navItems.filter((data) => (data.subMenus.map(c => c.id).includes(get(activePage, `id`)))), `[0].subMenus`, [])
+    // let subNav = data.sectionLanding ? get(navItems.filter((data) => (data.id === get(activePage, `id`))), `[0].subMenus`, []) :
+    //     get(navItems.filter((data) => (data.subMenus.map(c => c.id).includes(get(activePage, `id`)))), `[0].subMenus`, [])
 
     // console.log('render Page view', data)
 

@@ -1,7 +1,7 @@
 import React from "react"
 import get from 'lodash.get'
 
-import {TopNav, withAuth, useTheme} from '@availabs/avl-components'
+import {/*TopNav, withAuth,*/ useTheme} from '@availabs/avl-components'
 import {SideNav} from 'components/avl-components/src'
 import { Link } from 'react-router-dom'
 
@@ -10,10 +10,8 @@ import SectionSideNav from './SideNav'
 
 import Layout from 'pages/Layout'
 
-import SectionEdit from "./SectionViewNew"
 import {DmsButton} from "components/dms/components/dms-button"
 
-import logo from './Logo.js'
 
 const Create = ({createState, setValues, item, dataItems, ...props}) => {
     const theme = useTheme();

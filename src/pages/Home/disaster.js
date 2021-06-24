@@ -9,14 +9,14 @@ import {
 	DISASTER_DECLARATIONS_ATTRIBUTES, 
 	fnum 
 } from './utils'
-import { format, precisionPrefix, formatPrefix}  from 'd3-format'
+// import { format, precisionPrefix, formatPrefix}  from 'd3-format'
 
 const Home = ({ falcor, falcorCache, ...props }) => {
 
-    const [geoid, setGeoid] = React.useState(36)
+    // const [geoid, setGeoid] = React.useState(36)
     const { disasterNumber } = useParams();
 
-    console.log('disasterNumber')
+    console.log('disasterNumber', disasterNumber)
 
     React.useEffect(() => {
     	console.time('disastersFetch')
@@ -24,7 +24,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
         	['fema','disasters','byId', disasterNumber , DISASTER_ATTRIBUTES]
         ).then(d => console.timeEnd('disastersFetch'))
 		 
-    }, [falcor]);
+    }, [falcor,disasterNumber]);
 
     React.useEffect(() => {
     	
@@ -39,7 +39,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 	        	])
 	       	})
       	
-    }, [falcor,falcorCache]);
+    }, [falcor,falcorCache,disasterNumber]);
 
 
     const disaster =  React.useMemo(() => {
@@ -49,7 +49,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
     		.map(ref => get(falcorCache, ref.value , {}))
 	    return disaster
      
-    }, [falcorCache])
+    }, [falcorCache,disasterNumber])
     
     console.log('render', disaster, falcorCache)
     return (
@@ -158,7 +158,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 			          	</div>
 			          	<div className='text-xs'>
 			          		<span className='text-gray-500'>Declared </span>
-			          		{get(declaration, 'declaration_date.value', '').split('T')[0]}
+			          		{get(declaration, 'declaration_date.value', '')}
 			          	</div>
 			          	<div className='text-xs'>
 			          		<span className='text-gray-500'>Type </span>
@@ -177,8 +177,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 export default {
   path: "/disaster/:disasterNumber",
   exact: true,
-  auth: true,
-  component: Home,
+  auth: false,
   component: {
     type: Home,
     wrappers: [

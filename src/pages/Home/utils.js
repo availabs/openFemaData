@@ -1,4 +1,4 @@
-import { format, precisionPrefix, formatPrefix}  from 'd3-format'
+import { format, /*precisionPrefix, formatPrefix*/}  from 'd3-format'
 
 export const DISASTER_ATTRIBUTES= [
     "disaster_number",

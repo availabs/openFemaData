@@ -1,9 +1,9 @@
 import React  from "react"
-import {useTheme, TopNav} from '@availabs/avl-components'
-import AuthMenu from 'pages/Auth/AuthMenu'
+import {/*useTheme,*/ TopNav} from '@availabs/avl-components'
+// import AuthMenu from 'pages/Auth/AuthMenu'
 
 const Layout = ({children}) => {
-	const theme = useTheme()
+	// const theme = useTheme()
 	return (
 	  	<div className={`flex items-start flex-col min-h-screen`}>
             <div className='w-full fixed bg-white z-10'>
