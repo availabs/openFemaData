@@ -3,11 +3,9 @@ import React  from "react"
 import { Link } from 'react-router-dom'
 import AdminLayout from '../Layout'
 import get from 'lodash.get'
-
+import {fnum} from "utils/fnum";
 import { 
-	DISASTER_ATTRIBUTES, 
-	// DISASTER_DECLARATIONS_ATTRIBUTES, 
-	fnum 
+	DISASTER_ATTRIBUTES,
 } from './utils'
 // import { format, precisionPrefix, formatPrefix}  from 'd3-format'
 
