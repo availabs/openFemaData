@@ -1,5 +1,8 @@
 @tailwind base;
 
+h-80vh {
+    height: 80vh;
+}
 .hoverable .show-on-hover {
   display: none;
 }
