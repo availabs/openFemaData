@@ -1,7 +1,7 @@
 import React from "react";
 import get from "lodash.get";
 import {Toggle} from "../utils";
-import {fnum} from "../../../utils/fnum";
+import {fnum} from "utils/fnum";
 
 export const Top = (disaster, disasterNumber, groupEnabled, setGroupEnabled) => {
     return (

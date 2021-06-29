@@ -1,6 +1,7 @@
 import React from "react";
 import {groups, SUMMARY_ATTRIBUTES} from "../utils";
 import get from "lodash.get";
+import {fnum} from "utils/fnum";
 
 export const IHPSummary = (disaster, groupEnabled) => {
     return (
@@ -12,7 +13,7 @@ export const IHPSummary = (disaster, groupEnabled) => {
                         Object.keys(groups)
                             .map(group => {
                                 return (
-                                    <div className="px-6 py-5 text-sm font-medium text-center space-x-0 sm:space-x-5"
+                                    <div className="px-6 py-5 text-sm font-medium space-x-0 sm:space-x-5"
                                          >
                                         <div className={`block sm:inline-block`}>
                                             <div className='text-white rounded' style={{
@@ -22,6 +23,11 @@ export const IHPSummary = (disaster, groupEnabled) => {
                                                 {
                                                     groups[group].attributes.reduce((a,c) => a + get(disaster, [c, 'value'], 0) , 0).toLocaleString()
                                                 }
+                                            </div>
+                                            <div className='text-gray-600'>
+                                                        {
+                                                            fnum(groups[group].attributes.reduce((a,c) => a + get(disaster, [c, 'value'], 0) , 0))
+                                                        }
                                             </div>
                                         </div>
 
@@ -34,6 +40,11 @@ export const IHPSummary = (disaster, groupEnabled) => {
                                                     <div className='text-lg'>
                                                         {
                                                             get(disaster, [attr, 'value'], '').toLocaleString()
+                                                        }
+                                                    </div>
+                                                    <div className='text-gray-600'>
+                                                        {
+                                                            fnum(get(disaster, [attr, 'value'], 0))
                                                         }
                                                     </div>
                                                 </div>
@@ -52,6 +63,11 @@ export const IHPSummary = (disaster, groupEnabled) => {
                                 <div className='text-lg'>
                                     {
                                         get(disaster, [attr, 'value'], '').toLocaleString()
+                                    }
+                                </div>
+                                <div className='text-gray-600'>
+                                    {
+                                        fnum(get(disaster, [attr, 'value'], 0))
                                     }
                                 </div>
                             </div>
