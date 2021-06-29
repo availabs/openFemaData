@@ -13,11 +13,11 @@ export const IHPSummary = (disaster, groupEnabled) => {
                             .map(group => {
                                 return (
                                     <div className="px-6 py-5 text-sm font-medium text-center space-x-0 sm:space-x-5"
-                                         style={{
-                                             background: groups[group].color
-                                         }}>
+                                         >
                                         <div className={`block sm:inline-block`}>
-                                            <div className='text-gray-600'>{group}</div>
+                                            <div className='text-white rounded' style={{
+                                             background: groups[group].color
+                                         }}>{group}</div>
                                             <div className='text-lg'>
                                                 {
                                                     groups[group].attributes.reduce((a,c) => a + get(disaster, [c, 'value'], 0) , 0).toLocaleString()
@@ -28,7 +28,9 @@ export const IHPSummary = (disaster, groupEnabled) => {
                                         {
                                             groups[group].attributes.map(attr => (
                                                 <div className={`block sm:inline-block`}>
-                                                    <div className='text-gray-600'>{attr.replace(	/_/g, ' ')}</div>
+                                                    <div className='text-white rounded' style={{
+                                             background: groups[group].color
+                                         }}>{attr.replace(	/_/g, ' ')}</div>
                                                     <div className='text-lg'>
                                                         {
                                                             get(disaster, [attr, 'value'], '').toLocaleString()
@@ -43,10 +45,10 @@ export const IHPSummary = (disaster, groupEnabled) => {
                             }):
                         SUMMARY_ATTRIBUTES.map(attr => (
                             <div className="px-6 py-5 text-sm font-medium text-center"
-                                 style={{
+                                 >
+                                <div className='text-white rounded' style={{
                                      background: get(Object.values(groups).filter(g => g.attributes.includes(attr)), [0, 'color'])
-                                 }}>
-                                <div className='text-gray-600'>{attr.replace(	/_/g, ' ')}</div>
+                                 }}>{attr.replace(	/_/g, ' ')}</div>
                                 <div className='text-lg'>
                                     {
                                         get(disaster, [attr, 'value'], '').toLocaleString()

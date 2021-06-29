@@ -51,8 +51,12 @@ export const SUMMARY_ATTRIBUTES = [
 ];
 
 export const groups = {
+    'Total': {
+        attributes: ["ihp_amount"],
+        color: '#333'
+    },
     'IHP': {
-        attributes: ["ihp_amount", "ha_amount", "ona_amount"],
+        attributes: ["ha_amount", "ona_amount"],
         color: '#ecb074'
     },
     'FEMA determined disaster values': {
@@ -60,13 +64,9 @@ export const groups = {
         color: '#a4de57'
     },
 
-    'FEMA determined disaster value by Flood (real + personal)': {
-        attributes: ["flood_damage_amount"],
+    'FEMA determined disaster value ': {
+        attributes: ["flood_damage_amount","foundation_damage_amount", "roof_damage_amount"],
         color: '#7aade3'
-    },
-    'FEMA determined specific real damages': {
-        attributes: ["foundation_damage_amount", "roof_damage_amount"],
-        color: '#e88f8f'
     },
     'Assistance given': {
         attributes: ["fip_amount", "rental_assistance_amount", "repair_amount", "replacement_amount", "personal_property_amount"],
