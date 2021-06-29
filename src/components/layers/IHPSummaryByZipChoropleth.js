@@ -1,11 +1,11 @@
-import {scaleQuantile, scaleQuantize} from "d3-scale"
+import {scaleQuantile, scaleQuantize,scaleLinear} from "d3-scale"
 import get from "lodash.get"
 import {extent} from "d3-array";
 import {LayerContainer} from "@availabs/avl-map"
 import {getColorRange} from "@availabs/avl-components";
 import {SUMMARY_ATTRIBUTES} from 'pages/Home/utils'
 import {fnum} from "../../utils/fnum";
-
+import { ckmeans } from 'simple-statistics'
 
 class IHPSummaryByZipChoroplethoptions extends LayerContainer {
     constructor(props) {
@@ -31,7 +31,7 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
         type: "quantile",
         domain: [],
         format: fnum,
-        range: getColorRange(5, "YlOrRd", true),
+        range: getColorRange(7, "YlOrRd", true),
         show: true,
     }
 
@@ -106,18 +106,24 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
     }
 
     getColorScale(domain) {
-        switch (this.legend.type) {
-            case "quantile":
-                this.legend.domain = domain;
-                return scaleQuantile()
-                    .domain(this.legend.domain)
-                    .range(this.legend.range);
-            case "quantize":
-                this.legend.domain = extent(domain)
-                return scaleQuantize()
-                    .domain(this.legend.domain)
-                    .range(this.legend.range);
-        }
+        if(this.legend.range.length > domain.length) return this.legend.domain  = []
+        this.legend.domain = ckmeans(domain,this.legend.range.length).map(d => Math.min(...d))
+        //this.updateLegend(this.filters,this.legend)
+        return scaleLinear()
+          .domain(this.legend.domain)
+          .range(this.legend.range);
+        // switch (this.legend.type) {
+        //     case "quantile":
+        //         this.legend.domain = domain;
+        //         return scaleQuantile()
+        //             .domain(this.legend.domain)
+        //             .range(this.legend.range);
+        //     case "quantize":
+        //         this.legend.domain = extent(domain)
+        //         return scaleQuantize()
+        //             .domain(this.legend.domain)
+        //             .range(this.legend.range);
+        // }
     }
 
     render(map, falcor) {
