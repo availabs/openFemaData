@@ -205,7 +205,7 @@ const Home = (props) => {
 
                                     {
                                         (compareCols || []).map(col => (
-                                            <div className="px-6 py-5 text-sm font-medium text-center">
+                                            <div className="px-6 py-5 text-sm font-medium text-center bg-gray-50 shadow-lg">
                                                 <span
                                                     className={`float-right cursor-pointer`}
                                                     onClick={() => {
