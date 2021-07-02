@@ -62,6 +62,7 @@
     ]
   },
   "devDependencies": {
+    "@heroicons/react": "^1.0.1",
     "autoprefixer": "^10.2.5",
     "bluebird": "^3.7.2",
     "node-fetch": "^2.6.1",

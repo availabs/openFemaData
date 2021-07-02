@@ -1,6 +1,6 @@
 import React from "react";
 import get from "lodash.get";
-import {Toggle} from "../utils";
+import {Toggle} from "../tools/Toggle";
 import {fnum} from "utils/fnum";
 
 export const Top = (disaster, disasterNumber, groupEnabled, setGroupEnabled) => {

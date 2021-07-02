@@ -41,6 +41,34 @@ h-80vh {
 
 }
 
+.scrollbarXsm::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+    background-color: #bbb;
+}
+
+.scrollbarXsm::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background-color: #888;
+}
+
+.scrollbarXsm::-webkit-scrollbar-thumb:hover {
+}
+
+.scrollbarXsmTransparent::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+    background-color: rgba(187, 187, 187, 0);
+}
+
+.scrollbarXsmTransparent::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background-color: rgba(136, 136, 136, 0);
+}
+
+.scrollbarXsmTransparent::-webkit-scrollbar-thumb:hover {
+}
+
 @font-face{
     font-family:'Proxima Nova W01';
     src:url(./fonts/ProximaNova-Light-webfont.eot);
