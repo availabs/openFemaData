@@ -5,8 +5,13 @@ import _ from 'lodash'
 import AdminLayout from '../Layout'
 import get from 'lodash.get'
 import {fnum} from "utils/fnum";
-import {DISASTER_ATTRIBUTES, groups, SUMMARY_ATTRIBUTES} from './utils'
+import {DISASTER_ATTRIBUTES, SUMMARY_ATTRIBUTES, groups} from './utils'
 import {AddCompareCol} from "./tools/AddCompareCol";
+
+const calcCol = (col1, col2, op) =>
+    op === '/' ? col1 / col2 :
+        op === '+' ? col1 + col2 :
+            op === '-' ? col1 - col2 : null;
 
 const Home = (props) => {
     const {falcor, falcorCache} = useFalcor();
@@ -19,19 +24,22 @@ const Home = (props) => {
             falcor.get(['fema_disasters', 'length'])
                 .then(async res => {
                     const numDisasters = get(res.json, ['fema_disasters', 'length'], 0)
-                    await falcor.get(['fema_disasters', 'byIndex', {from: 0, to: numDisasters - 1}, DISASTER_ATTRIBUTES]);
+                    await falcor.get(['fema_disasters', 'byIndex', {
+                        from: 0,
+                        to: numDisasters - 1
+                    }, DISASTER_ATTRIBUTES]);
 
                     const disasterNumbers = Object.values(get(falcorCache, ['fema_disasters', 'byIndex'], {}))
                         .map(d => get(falcorCache, get(d, 'value', []), {}))
                         .map(d => get(d, 'disaster_number', null))
                         .filter(d => d);
 
-                    if(disasterNumbers.length){
+                    if (disasterNumbers.length) {
 
                         console.time('summaryData')
-                        let d = await _.chunk(disasterNumbers, 100).reduce((a,c, cI) => {
+                        let d = await _.chunk(disasterNumbers, 100).reduce((a, c, cI) => {
                             return a.then(() => {
-                                setLoadingIHPSummaryData(cI*100/(disasterNumbers.length/100))
+                                setLoadingIHPSummaryData(cI * 100 / (disasterNumbers.length / 100))
                                 return falcor.get(
                                     ['fema_disasters', c, 'declarations', 'length'],
                                     ['fema_disasters', 'byId', c, 'ihp_summary', SUMMARY_ATTRIBUTES]
@@ -57,7 +65,7 @@ const Home = (props) => {
             .map(d => {
                 return {
                     ...get(falcorCache, get(d, 'value', []), {}),
-                    ...get(falcorCache, ['fema_disasters','byId', get(d, ['value', 2], []) , 'ihp_summary'], {})
+                    ...get(falcorCache, ['fema_disasters', 'byId', get(d, ['value', 2], []), 'ihp_summary'], {})
                 }
             });
 
@@ -94,7 +102,7 @@ const Home = (props) => {
                     <div className='p-2'>TYPES:{JSON.stringify(data.disasterTypes)}</div>
                 </div>
 
-                <div  className='pt-4 pb-10'>
+                <div className='pt-4 pb-10'>
                     <button
                         type="button"
                         className={`items-center p-1 border border-transparent rounded-full shadow-sm text-white w-full
@@ -105,7 +113,8 @@ const Home = (props) => {
                             setShowCompareColsSetup(!showCompareColsSetup);
                         }}
                     >{showCompareColsSetup ? <i className="fas fa-times"></i> : 'compare'} </button>
-                    <span className={`float-right p-2 text-sm text-gray-500`}>{loadingIHPSummaryData < 100 ? `Loading Compare Data... ${fnum(loadingIHPSummaryData, false)} %` : ''}</span>
+                    <span
+                        className={`float-right p-2 text-sm text-gray-500`}>{loadingIHPSummaryData < 100 ? `Loading Compare Data... ${fnum(loadingIHPSummaryData, false)} %` : ''}</span>
                     {AddCompareCol(showCompareColsSetup, setShowCompareColsSetup, compareCols, setCompareCols)}
                 </div>
 
@@ -133,7 +142,8 @@ const Home = (props) => {
                                         </Link>
                                     </div>
 
-                                    <div className="px-6 py-5 text-sm font-medium text-center bg-gray-50 overflow-auto scrollbarXsm">
+                                    <div
+                                        className="px-6 py-5 text-sm font-medium text-center bg-gray-50 overflow-auto scrollbarXsm">
                                         <div className='text-gray-600'>Total</div>
                                         <div className='text-lg'>
                                             {fnum(+get(disaster, 'total_cost', ''))}
@@ -145,7 +155,8 @@ const Home = (props) => {
 
                                     </div>
 
-                                    <div className="px-6 py-5 text-sm font-medium text-center overflow-auto scrollbarXsm flex flex-wrap justify-center">
+                                    <div
+                                        className="px-6 py-5 text-sm font-medium text-center overflow-auto scrollbarXsm flex flex-wrap justify-center">
                                         <div>
                                             <div className='text-gray-600'>Total IHP</div>
                                             <div className='text-lg'>
@@ -165,7 +176,8 @@ const Home = (props) => {
                                         </div>
                                     </div>
 
-                                    <div className="px-6 py-5 text-sm font-medium text-center overflow-auto scrollbarXsm flex flex-wrap justify-center">
+                                    <div
+                                        className="px-6 py-5 text-sm font-medium text-center overflow-auto scrollbarXsm flex flex-wrap justify-center">
                                         <div>
                                             <div className='text-gray-600'>Total PA</div>
                                             <div className='text-lg'>
@@ -205,21 +217,51 @@ const Home = (props) => {
 
                                     {
                                         (compareCols || []).map(col => (
-                                            <div className="px-6 py-5 text-sm font-medium text-center bg-gray-50 shadow-lg">
-                                                <span
-                                                    className={`float-right cursor-pointer`}
-                                                    onClick={() => {
-                                                        localStorage.setItem('compareCols', JSON.stringify(compareCols.filter(cc => cc !== col)))
-                                                        setCompareCols(compareCols.filter(cc => cc !== col))}
-                                                    }
-                                                >x</span>
-                                                <div className='text-gray-600'>{col}</div>
+                                                <div className="px-6 py-5 text-sm font-medium text-center bg-gray-50 shadow-lg break-all">
+                                                    <span
+                                                        className={`float-right cursor-pointer text-gray-300 hover:text-gray-500 transform ease-out duration-300 transition`}
+                                                        onClick={() => {
+                                                            localStorage.setItem('compareCols', JSON.stringify(compareCols.filter(cc => cc !== col)))
+                                                            setCompareCols(compareCols.filter(cc => cc !== col))
+                                                        }
+                                                        }
+                                                    >{!i ? 'x' : null}</span>
 
-                                                {
-                                                    fnum(groups[col].attributes.reduce((a,c) => a + (+get(disaster, [c, 'value'], 0)), 0))
-                                                }
-                                            </div>
-                                        ))
+                                                    {
+                                                        typeof col === "string" ?
+                                                            (
+                                                                <React.Fragment>
+                                                                    <div className='text-gray-600'>{col}</div>
+                                                                    {fnum(groups[col].attributes.reduce((a, c) => a +
+                                                                        (+get(disaster, [c, 'value'], 0)), 0))}
+                                                                </React.Fragment>
+                                                            ) :
+                                                            col.type === 'simple' ?
+                                                                <React.Fragment>
+                                                                    <div className='text-gray-600 capitalize'>{(col.disasterAttr || col.summaryAttr).replace(/_/g, ' ')}</div>
+                                                                    {
+                                                                        fnum(col.disasterAttr ? get(disaster, [col.disasterAttr], 0) :
+                                                                            get(disaster, [col.summaryAttr, 'value'], 0))
+                                                                    }
+                                                                </React.Fragment> :
+                                                                (
+                                                                    <React.Fragment>
+                                                                        <div className='text-gray-600 capitalize'>{`${col.disasterAttr.replace(/_/g, ' ')} ${col.operation} ${col.summaryAttr.replace(/_/g, ' ')}`}</div>
+                                                                        {
+                                                                            calcCol(
+                                                                                get(disaster, [col.disasterAttr], 0),
+                                                                                Object.keys(groups).includes(col.summaryAttr) ?
+                                                                                    groups[col.summaryAttr].attributes.reduce((a, c) => a +
+                                                                                        (+get(disaster, [c, 'value'], 0)), 0)
+                                                                                    : get(disaster, [col.summaryAttr, 'value'], 0),
+                                                                                col.operation).toFixed(5)
+                                                                        }
+                                                                    </React.Fragment>
+                                                                )
+                                                    }
+                                                </div>
+                                            )
+                                        )
                                     }
                                 </div>
                             )
