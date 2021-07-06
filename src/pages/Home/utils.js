@@ -70,7 +70,7 @@ export const groups = {
     },
     'Assistance given': {
         attributes: ["fip_amount", "rental_assistance_amount", "repair_amount", "replacement_amount", "personal_property_amount"],
-        color: '#f1e4a5'
+        color: 'gold'
     }
 }
 
