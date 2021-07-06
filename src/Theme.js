@@ -34,7 +34,7 @@ const light_base = {
     navitemTop: 'px-4 text-sm font-medium tracking-widest uppercase inline-flex items-center  border-transparent  leading-5 text-white hover:bg-white hover:text-darkblue-500 border-gray-200 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out h-full',
     navitemTopActive: 'px-4 text-sm font-medium tracking-widest uppercase inline-flex items-center leading-5 text-darkblue-500 bg-white focus:outline-none  sfocus:border-indigo-700 transition duration-150 ease-in-out',
     topNavHeight: '12',
-
+    scrollBar: 'overflow-auto scrollbarXsm scrollbar-sm',
     navMenu: 'h-full relative',
     navMenuOpen: 'bg-darkblue-500 text-white shadow-lg w-56 rounded-t-lg',
     navMenuBg: 'bg-darkblue-500 bb-rounded-10 shadow-lg text-white rounded-b-lg',
