@@ -5,7 +5,7 @@ import _ from 'lodash'
 import AdminLayout from '../Layout'
 import get from 'lodash.get'
 import {fnum} from "utils/fnum";
-import {DISASTER_ATTRIBUTES, SUMMARY_ATTRIBUTES, groups} from './utils'
+import {DISASTER_ATTRIBUTES, SUMMARY_ATTRIBUTES, groups, compareGroups} from './utils'
 import {AddCompareCol} from "./tools/AddCompareCol";
 
 const calcCol = (col1, col2, op) =>
@@ -13,6 +13,49 @@ const calcCol = (col1, col2, op) =>
         op === '+' ? col1 + col2 :
             op === '-' ? col1 - col2 : null;
 
+const getFinalValue = (disaster, col) => {
+    const getValue = {
+        disasterAttr: (attr) => typeof attr === "string" ?
+            get(disaster, [attr], 0) :
+            getFinalValue(disaster, attr),
+        summaryAttr: (attr) => typeof attr === "string" ?
+            Object.keys(groups).includes(attr) ?
+                groups[attr].attributes.reduce((a, c) => a + (+get(disaster, [c, 'value'], 0)), 0)
+                : get(disaster, [attr, 'value'], 0) :
+            getFinalValue(disaster, attr)
+    }
+
+    let attr1, attr2, title = col.title;
+    let sequence = get(col, 'sequence', 'disasterAttr::summaryAttr').split('::');
+
+    if(col.type === 'operation'){
+
+        attr1 = getValue[sequence[0]](col[sequence[0]]);
+        attr2 = getValue[sequence[1]](col[sequence[1]]);
+    }else if(col.type.split('::')[1]){
+        attr1 = getValue[col.type.split('::')[1]](col.attrs[0]);
+        attr2 = getValue[col.type.split('::')[1]](col.attrs[1]);
+    }
+
+    if(!title){
+        title = `${attr1.title || col[sequence[0]] || col.attrs[0]} ${col.operation} ${attr2.title || col[sequence[1]] || col.attrs[1]}`
+    }
+
+    return {value: calcCol(+attr1.value || +attr1, +attr2.value || +attr2, col.operation), title}
+}
+
+const RenderCustom = (disaster, col) => {
+    const {value, title} = getFinalValue(disaster, col);
+
+    return (
+        <React.Fragment>
+            <div className='text-gray-600 capitalize'>{col.title || title.replace(/_/g, ' ')}</div>
+            {
+                value.toFixed(5)
+            }
+        </React.Fragment>
+    )
+}
 const Home = (props) => {
     const {falcor, falcorCache} = useFalcor();
     const [compareCols, setCompareCols] = React.useState(JSON.parse(localStorage.getItem('compareCols') || '[]'));
@@ -123,7 +166,7 @@ const Home = (props) => {
                         .filter((d, i) => i < 100)
                         .map((disaster, i) => (
                                 <div key={i}
-                                     className={`border-t border-gray-200 bg-white grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-${compareCols.length + 6} sm:divide-y-0 sm:divide-x`}>
+                                     className={`border-t border-gray-200 bg-white grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-${compareGroups.length + compareCols.length + 6} sm:divide-y-0 sm:divide-x`}>
                                     <div className={`px-6 py-5 text-sm font-medium text-center`}>
                                         <Link to={`/disaster/${get(disaster, 'disaster_number', 0)}`}>
                                             <div>{get(disaster, 'name', '')}</div>
@@ -216,7 +259,7 @@ const Home = (props) => {
                                     </div>
 
                                     {
-                                        (compareCols || []).map(col => (
+                                        ([...compareGroups, ...(compareCols || [])]).map(col => (
                                                 <div className="px-6 py-5 text-sm font-medium text-center bg-gray-50 shadow-lg break-all">
                                                     <span
                                                         className={`float-right cursor-pointer text-gray-300 hover:text-gray-500 transform ease-out duration-300 transition`}
@@ -244,20 +287,7 @@ const Home = (props) => {
                                                                             get(disaster, [col.summaryAttr, 'value'], 0))
                                                                     }
                                                                 </React.Fragment> :
-                                                                (
-                                                                    <React.Fragment>
-                                                                        <div className='text-gray-600 capitalize'>{`${col.disasterAttr.replace(/_/g, ' ')} ${col.operation} ${col.summaryAttr.replace(/_/g, ' ')}`}</div>
-                                                                        {
-                                                                            calcCol(
-                                                                                get(disaster, [col.disasterAttr], 0),
-                                                                                Object.keys(groups).includes(col.summaryAttr) ?
-                                                                                    groups[col.summaryAttr].attributes.reduce((a, c) => a +
-                                                                                        (+get(disaster, [c, 'value'], 0)), 0)
-                                                                                    : get(disaster, [col.summaryAttr, 'value'], 0),
-                                                                                col.operation).toFixed(5)
-                                                                        }
-                                                                    </React.Fragment>
-                                                                )
+                                                                RenderCustom(disaster, col)
                                                     }
                                                 </div>
                                             )

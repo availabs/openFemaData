@@ -1,5 +1,3 @@
-import {Switch} from '@headlessui/react'
-
 export const DISASTER_ATTRIBUTES = [
     "disaster_number",
     "name",
@@ -73,3 +71,46 @@ export const groups = {
         color: '#f1e4a5'
     }
 }
+
+
+/*
+    There are two types of column configs:
+
+    1. {title: 'title1', type: 'operation::summaryAttr', attrs: ['Assistance given', 'personal_property_amount'], operation: '-'}
+    2. {
+        title: 'Title 1',
+        type: 'operation',
+        disasterAttr: 'total_amount_ha_approved',
+        summaryAttr: 'personal_property_amount',
+        operation: '/'}
+
+    #1 can be nested in #2:
+    {
+        title: 'Title 1',
+        type: 'operation',
+        disasterAttr: 'total_amount_ha_approved',
+        summaryAttr: {type: 'operation::summaryAttr', attrs: ['Assistance given', 'personal_property_amount'], operation: '-'},
+        operation: '/'}
+*/
+export const compareGroups = [
+    {
+        title: 'Title 1',
+        type: 'operation',
+        disasterAttr: 'total_amount_ha_approved',
+        summaryAttr: {type: 'operation::summaryAttr', attrs: ['Assistance given', 'personal_property_amount'], operation: '-'},
+        operation: '/'},
+
+    {
+        // title: 'Title 1',
+        type: 'operation',
+        disasterAttr: 'total_amount_ona_approved',
+        summaryAttr: 'personal_property_amount',
+        operation: '/'},
+
+    {
+        type: 'operation',
+        disasterAttr: 'total_amount_ihp_approved',
+        summaryAttr: {type: 'operation::summaryAttr', attrs: ['rpfvl', 'ppfvl'], operation: '+'},
+        sequence: 'summaryAttr::disasterAttr',
+        operation: '/'},
+]
