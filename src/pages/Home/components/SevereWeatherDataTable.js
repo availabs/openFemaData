@@ -1,9 +1,8 @@
 import _ from "lodash";
-import get from "lodash.get";
 import React from "react";
 import {Table} from '@availabs/avl-components'
 
-export const SevereWeatherDataTable = (data= [], mapFocus, setMapFocus) => {
+export const SevereWeatherDataTable = (data = [], mapFocus, setMapFocus) => {
     data = data.map(d =>
         Object.assign({},
             {
