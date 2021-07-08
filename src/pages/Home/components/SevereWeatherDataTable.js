@@ -9,7 +9,7 @@ export const SevereWeatherDataTable = (data= [], mapFocus, setMapFocus) => {
             {
                 location:
                     <div
-                        className={'fas fa-map-marker-alt bg-blue-200 hover:bg-blue-500 cursor-pointer'}
+                        className={`fas fa-map-marker-alt text-blue-${mapFocus === d.geom ? 400 : 200} hover:text-blue-500 cursor-pointer transform duration-300 ease-out transition`}
                         onClick={() => setMapFocus(mapFocus === d.geom ? null : d.geom)}
                     />
             }, d
@@ -26,6 +26,8 @@ export const SevereWeatherDataTable = (data= [], mapFocus, setMapFocus) => {
                             Header: c,
                             accessor: c,
                             align: 'center',
+                            disableFilters: true,
+                            disableSortBy: true
                         }))
                 }
                 initialPageSize={data.length || 10}
