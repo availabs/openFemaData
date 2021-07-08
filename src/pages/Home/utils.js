@@ -25,6 +25,8 @@ export const DISASTER_DECLARATIONS_ATTRIBUTES = [
     'state',
     'declaration_type',
     'declaration_date',
+    'incident_begin_date',
+    'incident_end_date',
     'disaster_number',
     'fips_state_code',
     'fips_county_code',
