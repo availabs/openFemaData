@@ -1779,6 +1779,34 @@
   dependencies:
     "@babel/runtime" "^7.12.5"
 
+"@turf/bbox@^6.4.0":
+  "integrity" "sha512-eASq6Op3sGAA293Qo3gTwuQAvdoQCKah4rgA5FZkQ2xvkYquQnkUhV2U18bFgw58aSP1g2Y+rpmSEPHDFX6/6g=="
+  "resolved" "https://registry.npmjs.org/@turf/bbox/-/bbox-6.4.0.tgz"
+  "version" "6.4.0"
+  dependencies:
+    "@turf/helpers" "^6.4.0"
+    "@turf/meta" "^6.4.0"
+
+"@turf/center@^6.4.0":
+  "integrity" "sha512-qCeAsdAY9hfh/3hFcYOkaWjNN/qJn6PosiLm4jnx1NDzXmUymFFRwEix5SfNzjvKGBoKrojPOs22im/BlFRNKQ=="
+  "resolved" "https://registry.npmjs.org/@turf/center/-/center-6.4.0.tgz"
+  "version" "6.4.0"
+  dependencies:
+    "@turf/bbox" "^6.4.0"
+    "@turf/helpers" "^6.4.0"
+
+"@turf/helpers@^6.4.0":
+  "integrity" "sha512-7vVpWZwHP0Qn8DDSlM++nhs3/6zfPt+GODjvLVZ+sWIG4S3vOtUUOfO5eIjRzxsUHHqhgiIL0QA17u79uLM+mQ=="
+  "resolved" "https://registry.npmjs.org/@turf/helpers/-/helpers-6.4.0.tgz"
+  "version" "6.4.0"
+
+"@turf/meta@^6.4.0":
+  "integrity" "sha512-fMra6vMskwz1knn0/tb22ppOeE8CCmpvOvTIxLdV1WYWAoC4bJ4WdXKvZRsJKpHOX5iFehx4DT8aaGdROA4Y3Q=="
+  "resolved" "https://registry.npmjs.org/@turf/meta/-/meta-6.4.0.tgz"
+  "version" "6.4.0"
+  dependencies:
+    "@turf/helpers" "^6.4.0"
+
 "@types/anymatch@*":
   "integrity" "sha512-/+CRPXpBDpo2RK9C68N3b2cOvO0Cf5B9aPijHsoDQTHivnGSObdOF2BRQOYjojWTDy6nQvMjmqRXIxH55VjxxA=="
   "resolved" "https://registry.npmjs.org/@types/anymatch/-/anymatch-1.3.1.tgz"
