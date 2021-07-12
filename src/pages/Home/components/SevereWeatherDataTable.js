@@ -3,8 +3,11 @@ import React from "react";
 import {Table} from '@availabs/avl-components'
 
 export const SevereWeatherDataTable = (data = [], mapFocus, setMapFocus) => {
-    data = data.map(d =>
-        Object.assign({},
+    let summary = {num_episodes: 0, num_events: 0, total_damage: 0}
+    data = data.map(d => {
+        Object.keys(summary)
+            .forEach(attr => summary[attr] += +d[attr])
+        return Object.assign({},
             {
                 location:
                     <div
@@ -12,23 +15,36 @@ export const SevereWeatherDataTable = (data = [], mapFocus, setMapFocus) => {
                         onClick={() => setMapFocus(mapFocus === d.geom ? null : d.geom)}
                     />
             }, d
-        ))
+        )
+    })
+    const cols = _.keys(data[0])
+        .filter(c => !['geom', 'episode_narrative', 'event_narrative', 'county'].includes(c))
+        .map(c => ({
+            Header: c.replace(/_/g, ' ').replace(/num/g, '#'),
+            accessor: c,
+            align: 'center',
+            disableFilters: true,
+            disableSortBy: true,
+        }))
+
     return (
         <div className={`mt-20`}>
             <h4 className={`pt-5`}> Severe Weather Data </h4>
+            <div className={`flex flex-col sm:flex-row bg-white grid grid-cols-1 sm:grid-cols-${Object.keys(summary).length} divide-y divide-gray-200 sm:divide-y-0 sm:divide-x mb-5`}>
+                {
+                    Object.keys(summary)
+                        .map(attr => (
+                            <div className={`px-6 py-5 text-sm font-medium text-center`}>
+                                <div className={`text-gray capitalize`}>{attr.replace(/_/g, ' ').replace(/num/g, 'total #')}</div>
+                                <div className={`text-lg`}>{summary[attr]}</div>
+                            </div>
+                        ))
+                }
+            </div>
+
             <Table
                 data={data}
-                columns={
-                    _.keys(data[0])
-                        .filter(c => c !== 'geom')
-                        .map(c => ({
-                            Header: c,
-                            accessor: c,
-                            align: 'center',
-                            disableFilters: true,
-                            disableSortBy: true
-                        }))
-                }
+                columns={cols}
                 initialPageSize={data.length || 10}
             />
         </div>

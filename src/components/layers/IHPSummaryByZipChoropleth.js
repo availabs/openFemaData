@@ -1,18 +1,17 @@
-import {scaleQuantile, scaleQuantize,scaleLinear} from "d3-scale"
+import {scaleLinear} from "d3-scale"
 import get from "lodash.get"
-import {extent} from "d3-array";
 import center from '@turf/center'
-import mapboxgl from "mapbox-gl";
 import {LayerContainer} from "@availabs/avl-map"
-import {getColorRange} from "@availabs/avl-components";
+import {getColorRange, useTheme} from "@availabs/avl-components";
 import {SUMMARY_ATTRIBUTES} from 'pages/Home/utils'
 import {fnum} from "../../utils/fnum";
-import { ckmeans } from 'simple-statistics'
+import {ckmeans} from 'simple-statistics'
 
 class IHPSummaryByZipChoroplethoptions extends LayerContainer {
     constructor(props) {
         super(props);
     }
+
     // setActive = !!this.viewId
     name = 'IHP Summary By Zipcodes'
     id = 'IHP Summary By Zipcodes'
@@ -39,6 +38,32 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
 
     onHover = {
         layers: ['zipcodes', 'events'],
+        HoverComp: ({data, layer}) => {
+            const theme = useTheme();
+            return (
+                <div style={{maxHeight: '300px'}} className={`${theme.bg} rounded relative px-1 overflow-auto scrollbarXsm`}>
+                    {
+                        data.map((row, i) =>
+                            <div key={i} className="flex">
+                                {
+                                    row.map((d, ii) =>
+                                        <div key={ii}
+                                             style={{maxWidth: '200px'}}
+                                             className={`
+                                                    ${ii === 0 ? "flex-1 font-bold" : "overflow-auto scrollbarXsm"}
+                                                    ${row.length > 1 && ii === 0 ? "mr-4" : ""}
+                                                    ${row.length === 1 && ii === 0 ? `border-b-2 text-lg ${i > 0 ? "mt-1" : ""}` : ""}
+                                                    `}>
+                                            {d}
+                                        </div>
+                                    )
+                                }
+                            </div>
+                        )
+                    }
+                </div>
+            )
+        },
         callback: (layerId, features, lngLat) => {
             return features.reduce((a, feature) => {
                 return feature.layer.id === 'zipcodes' ? [
@@ -95,7 +120,7 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
 
 
     init(map, falcor) {
-        map.fitBounds([ -125.0011, 24.9493, -66.9326, 49.5904 ])
+        map.fitBounds([-125.0011, 24.9493, -66.9326, 49.5904])
     }
 
     onFilterChange(filterName, newValue, prevValue) {
@@ -110,35 +135,35 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
     }
 
     fetchData(falcor) {
-        if(!this.disasterNumber) return Promise.resolve();
+        if (!this.disasterNumber) return Promise.resolve();
 
-        return falcor.get(['fema_disasters','byId', this.disasterNumber , 'byZip', 'ihp_summary']).then(d => {
-            this.data = get(d, ['json', 'fema_disasters','byId', this.disasterNumber , 'byZip', 'ihp_summary'], {})
+        return falcor.get(['fema_disasters', 'byId', this.disasterNumber, 'byZip', 'ihp_summary']).then(d => {
+            this.data = get(d, ['json', 'fema_disasters', 'byId', this.disasterNumber, 'byZip', 'ihp_summary'], {})
         })
     }
 
     getColorScale(domain) {
-        if(this.legend.range.length > domain.length) return this.legend.domain  = []
-        this.legend.domain = ckmeans(domain,this.legend.range.length).map(d => Math.min(...d))
+        if (this.legend.range.length > domain.length) return this.legend.domain = []
+        this.legend.domain = ckmeans(domain, this.legend.range.length).map(d => Math.min(...d))
 
         return scaleLinear()
-          .domain(this.legend.domain)
-          .range(this.legend.range);
+            .domain(this.legend.domain)
+            .range(this.legend.range);
     }
 
     handleMapFocus(map) {
-        if(this.mapFocus){
-            try{
+        if (this.mapFocus) {
+            try {
                 map.flyTo(
                     {
                         center: get(center(JSON.parse(this.mapFocus)), ['geometry', 'coordinates']),
                         zoom: 9
                     })
-            }catch (e){
-                map.fitBounds([ -125.0011, 24.9493, -66.9326, 49.5904 ])
+            } catch (e) {
+                map.fitBounds([-125.0011, 24.9493, -66.9326, 49.5904])
             }
-        }else{
-            map.fitBounds([ -125.0011, 24.9493, -66.9326, 49.5904 ])
+        } else {
+            map.fitBounds([-125.0011, 24.9493, -66.9326, 49.5904])
         }
     }
 
@@ -160,11 +185,11 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
             "features": []
         };
 
-        if(map.getSource('events')){
+        if (map.getSource('events')) {
             map.removeLayer('events')
             map.removeSource('events')
         }
-        map.addSource('events', { type: 'geojson', data: data });
+        map.addSource('events', {type: 'geojson', data: data});
         map.addLayer({
             'id': 'events',
             'type': 'circle',
@@ -177,7 +202,7 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
         });
 
 
-        if(this.severeWeatherData){
+        if (this.severeWeatherData) {
             this.severeWeatherData
                 .forEach(event => {
                     data.features.push(

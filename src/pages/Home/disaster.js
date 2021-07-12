@@ -7,6 +7,7 @@ import {
 	DISASTER_ATTRIBUTES,
 	DISASTER_DECLARATIONS_ATTRIBUTES,
 	SUMMARY_ATTRIBUTES,
+	SEVERE_WEATHER_ATTRIBUTES
 } from './utils'
 
 import {Top} from './components/Top'
@@ -93,7 +94,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 			let date2 = `${disaster.latestEventEnd.getFullYear()}-${disaster.latestEventEnd.getMonth()+1}-${disaster.latestEventEnd.getDate()}`;
 
 			return falcor.get(
-				['severeWeather', disaster.counties, 'byTimeStampRange', date1, date2, get(disaster, ['disaster_type', 'value'], 'hurricane'), ['geom', 'num_events', 'num_episodes', 'num_severe_events', 'total_damage', 'property_damage', 'crop_damage', 'injuries', 'fatalities']]
+				['severeWeather', disaster.counties, 'byTimeStampRange', date1, date2, get(disaster, ['disaster_type', 'value'], 'hurricane'), SEVERE_WEATHER_ATTRIBUTES]
 			)
 		}
 	}, [disaster, falcor, falcorCache])
