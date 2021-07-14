@@ -50,6 +50,19 @@ export const SUMMARY_ATTRIBUTES = [
     "roof_damage_amount",
 ];
 
+export const SEVERE_WEATHER_ATTRIBUTES = [
+    'geom',
+    'num_events',
+    'num_episodes',
+    'num_severe_events',
+    'total_damage',
+    'property_damage',
+    'crop_damage',
+    'injuries',
+    'fatalities',
+    'episode_narrative',
+    'event_narrative'
+]
 export const groups = {
     'Total': {
         attributes: ["ihp_amount"],
