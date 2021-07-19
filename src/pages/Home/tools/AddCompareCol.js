@@ -1,7 +1,6 @@
 import { Fragment, useState } from 'react'
 import { Transition } from '@headlessui/react'
-import { Select } from '@availabs/avl-components'
-import { groups, SUMMARY_ATTRIBUTES, DISASTER_ATTRIBUTES } from "../utils";
+import { groups, SUMMARY_ATTRIBUTES, DISASTER_ATTRIBUTES } from "../config";
 
 const nav = (activeNav, setActiveNav) => {
     const tabs = ['Groups', 'Custom']

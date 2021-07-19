@@ -3,7 +3,7 @@ import get from "lodash.get"
 import center from '@turf/center'
 import {LayerContainer} from "@availabs/avl-map"
 import {getColorRange, useTheme} from "@availabs/avl-components";
-import {SUMMARY_ATTRIBUTES} from 'pages/Home/utils'
+import {SUMMARY_ATTRIBUTES} from 'pages/Home/config'
 import {fnum} from "../../utils/fnum";
 import {ckmeans} from 'simple-statistics'
 
