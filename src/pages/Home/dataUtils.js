@@ -37,9 +37,9 @@ export const LoadFEMADisasters = (falcor, falcorCache, setLoadingIHPSummaryData,
                                 return falcor.get(
                                     ['fema_disasters', c, 'declarations', 'length'],
                                     ['fema_disasters', 'byId', c, 'ihp_summary', SUMMARY_ATTRIBUTES],
-                                    ['fema', 'disasters', 'byId', c, DISASTER_ATTRIBUTES],
-                                    ['fema', 'disasters', c, 'declarations', 'length']
-                                )/*.then(() => fetchDecData(falcor, falcorCache, loadingIHPSummaryData))*/
+                                    ['fema_disasters', 'byId', c, DISASTER_ATTRIBUTES],
+                                    ['fema_disasters', c, 'declarations', 'length']
+                                )
                             })
                         }, Promise.resolve());
                     }
@@ -52,7 +52,7 @@ export const LoadFEMADisasters = (falcor, falcorCache, setLoadingIHPSummaryData,
 }
 const fetchDecData = (falcor, falcorCache, loadingIHPSummaryData) => {
     if (loadingIHPSummaryData.progress > 95 && loadingIHPSummaryData.type === 'FEMA Disasters') {
-        let disasters = get(falcorCache, ['fema', 'disasters'], {});
+        let disasters = get(falcorCache, ['fema_disasters'], {});
         let reqs = [];
         Object.keys(disasters)
             .forEach(disasterNumber => {
@@ -60,7 +60,7 @@ const fetchDecData = (falcor, falcorCache, loadingIHPSummaryData) => {
                 if(declarationLength > 50){
                     for(let i = 0; i < declarationLength; i += 50){
                         reqs.push(
-                            ['fema', 'disasters', disasterNumber, 'declarations', 'byIndex',
+                            ['fema_disasters', disasterNumber, 'declarations', 'byIndex',
                                 {from: i, to: Math.min(i+49, declarationLength - 1)},
                                 DISASTER_DECLARATIONS_ATTRIBUTES
                             ]
@@ -68,7 +68,7 @@ const fetchDecData = (falcor, falcorCache, loadingIHPSummaryData) => {
                     }
                 }else{
                     reqs.push(
-                        ['fema', 'disasters', disasterNumber, 'declarations', 'byIndex',
+                        ['fema_disasters', disasterNumber, 'declarations', 'byIndex',
                             {from: 0, to: declarationLength - 1},
                             DISASTER_DECLARATIONS_ATTRIBUTES
                         ]

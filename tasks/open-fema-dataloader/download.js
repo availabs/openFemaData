@@ -11,7 +11,7 @@ const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLow
 let datasources = sql.define(tables.datasources)
 
 db.promise(datasources.select().toQuery()).then(sources => {
-	//console.log('sources', )
+	// console.log('sources', sources)
 	sources
 		.filter(d => [
 			//'disaster_declarations_summaries_v2'
@@ -19,7 +19,8 @@ db.promise(datasources.select().toQuery()).then(sources => {
   			//'fema_web_disaster_summaries_v1',
   			// 'housing_assistance_owners_v2',
   			// 'housing_assistance_renters_v2',
-  			'individuals_and_households_program_valid_registrations_v1'
+  			// 'individuals_and_households_program_valid_registrations_v1'
+			'public_assistance_funded_projects_details_v1'
 			].includes(d.table.split('.')[1]))
 		.forEach(source => {
 			updateChunks(source)
@@ -55,14 +56,22 @@ function updateChunks(source) {
 				console.timeEnd(`fetch skip ${skip}`)
 				let dataKey = source.data_url.split('/')[source.data_url.split('/').length-1]
 				let data = res[dataKey]
+				let notNullCols = [
+						...tables[table].columns.filter(c => c.dataType === 'numeric').map(c => c.name),
+					'project_size' // PA specific
+				]
 				const newData = data.map((curr) => {
 					return Object.keys(curr).reduce((snake, col) => {
-						snake[camelToSnakeCase(col)] = curr[col]
+						if(notNullCols.includes(camelToSnakeCase(col)) && !curr[col]){
+							snake[camelToSnakeCase(col)] = 0; // nulls in numeric
+						}else{
+							snake[camelToSnakeCase(col)] = curr[col]
+						}
 						return snake
 					},{})
 					
 				},{})
-				console.log(newData[0])
+				// console.log(newData[0])
 				Promise.all(
 					arrayChunk(newData,500)
 					//.filter((k,i) => i < 1)

@@ -17,7 +17,7 @@ import {Declarations} from './components/Declarations'
 import {Map} from './components/Map'
 import _ from "lodash";
 
-const ProcessSevereWeatherData = (falcorCache, disaster) => {
+const ProcessSevereWeatherData = (falcorCache, disaster, disasterNumber) => React.useMemo(() => {
 	let result = [];
 	_.keys(get(falcorCache, 'severeWeather', {})).forEach(county => {
 			_.keys(get(falcorCache, ['severeWeather', county, 'byTimeStampRange'], {})).forEach(startDate => {
@@ -36,7 +36,7 @@ const ProcessSevereWeatherData = (falcorCache, disaster) => {
 		}
 	)
 	return result.filter(f => f.num_events).sort((a,b) => +a.num_events - +b.num_events)
-}
+}, [disaster, disasterNumber, falcorCache])
 
 const Home = ({ falcor, falcorCache, ...props }) => {
 
@@ -46,31 +46,36 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 
     React.useEffect(() => {
         return falcor.get(
-        	['fema','disasters','byId', disasterNumber , DISASTER_ATTRIBUTES],
+        	['fema_disasters','byId', disasterNumber , DISASTER_ATTRIBUTES],
         	['fema_disasters','byId', disasterNumber , 'ihp_summary', SUMMARY_ATTRIBUTES],
         	['fema_disasters','byId', disasterNumber , 'byZip', 'ihp_summary'],
-			['fema','disasters', disasterNumber, 'declarations', 'length']
+			['fema_disasters', disasterNumber, 'declarations', 'length']
         ).then(dec => {
-			let declarationLength = get(dec, ['json','fema', 'disasters', disasterNumber, 'declarations', 'length'], {});
-
-			falcor.get(['fema','disasters', disasterNumber, 'declarations', 'byIndex',
+			let declarationLength = get(dec, ['json','fema_disasters', disasterNumber, 'declarations', 'length'], {});
+			falcor.get(['fema_disasters', disasterNumber, 'declarations', 'byIndex',
 				{from: 0, to: declarationLength-1},
 				DISASTER_DECLARATIONS_ATTRIBUTES
 			]);
 		});
-    }, [falcor, falcorCache, disasterNumber]);
+    }, [falcorCache, disasterNumber]);
+
 
     const {disaster, disasterByZip} =  React.useMemo(() => {
     	let disaster = {
-    		...get(falcorCache, ['fema', 'disasters', 'byId', disasterNumber], {}),
+    		...Object.keys(get(falcorCache, ['fema_disasters', 'byId', disasterNumber], {}))
+				.reduce((acc, attr) => {
+					acc[attr] = {value: get(falcorCache, ['fema_disasters', 'byId', disasterNumber, attr], '')}
+					return acc
+				}, {}),
+
     		...get(falcorCache, ['fema_disasters', 'byId', disasterNumber, 'ihp_summary'], {}),
 			counties: [],
 			earliestEventStart: null,
 			latestEventEnd: null
     	},
 			disasterByZip = get(falcorCache, ['fema_disasters', 'byId', disasterNumber, 'byZip', 'ihp_summary'], {})
-
-    	disaster.declarations = Object.values(get(falcorCache, ['fema', 'disasters', disasterNumber, 'declarations', 'byIndex'],{}))
+    	disaster.declarations = Object.values(get(falcorCache, ['fema_disasters', disasterNumber, 'declarations', 'byIndex'],{}))
+			.filter(ref => ref)
     		.map(ref => {
     			let county = get(falcorCache, [...ref.value, 'fips_state_code', 'value'], '') + get(falcorCache, [...ref.value, 'fips_county_code', 'value'], '');
     			let date1 = new Date(get(falcorCache, [...ref.value, 'incident_begin_date', 'value'], ''));
@@ -86,7 +91,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 			})
 	    return {disaster, disasterByZip}
 
-    }, [falcorCache,disasterNumber]);
+    }, [falcorCache, disasterNumber]);
 
     React.useEffect(() => {
     	if(disaster.earliestEventStart && disaster.latestEventEnd){
@@ -97,9 +102,9 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 				['severeWeather', 'byDisaster', disasterNumber, SEVERE_WEATHER_ATTRIBUTES]
 			)
 		}
-	}, [disaster, falcor, falcorCache])
+	}, [disaster, disasterNumber, falcorCache])
 
-	let severeWeatherData = ProcessSevereWeatherData(falcorCache, disaster);
+	let severeWeatherData = ProcessSevereWeatherData(falcorCache, disaster, disasterNumber);
 
 	let severeWeatherDataTotals = React.useMemo(() => {
 		return (
@@ -109,15 +114,15 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 				total_damage: get(falcorCache, ['severeWeather', 'byDisaster', disasterNumber, 'total_damage']),
 			}
 		)
-	}, [falcor, falcorCache]);
+	}, [disasterNumber, falcorCache]);
 
     return (
       <AdminLayout>
 	  		<div className="w-full max-w-7xl mx-auto">
 				{Top(disaster, disasterNumber, groupEnabled, setGroupEnabled)}
 				{IHPSummary(disaster, groupEnabled)}
-				{Map(disasterNumber, severeWeatherData, mapFocus)}
-				{SevereWeatherDataTable(severeWeatherDataTotals, severeWeatherData, mapFocus, setMapFocus)}
+				{Map(disasterNumber, severeWeatherDataTotals.num_episodes ? severeWeatherData : [], mapFocus)}
+				{SevereWeatherDataTable(severeWeatherDataTotals, severeWeatherDataTotals.num_episodes ? severeWeatherData : [], mapFocus, setMapFocus)}
 				{Declarations(disaster)}
         	</div>
 		</AdminLayout>

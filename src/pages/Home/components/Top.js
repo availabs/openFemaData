@@ -20,7 +20,7 @@ export const Top = (disaster, disasterNumber, groupEnabled, setGroupEnabled) => 
                     </div>
                     <div className='text-xs'>
                         <span className='text-gray-500'>Declared </span>
-                        {get(disaster, 'declaration_date.value', '').split('T')[0]}
+                        {get(disaster, 'declaration_date.value', '')}
                     </div>
                     <div className='text-xs'>
                         <span className='text-gray-500'>County </span>
