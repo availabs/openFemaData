@@ -1,12 +1,11 @@
 import _ from "lodash";
+import get from 'lodash'
 import React from "react";
 import {Table} from '@availabs/avl-components'
 
-export const SevereWeatherDataTable = (data = [], mapFocus, setMapFocus) => {
-    let summary = {num_episodes: 0, num_events: 0, total_damage: 0}
+export const SevereWeatherDataTable = (totals = {}, data = [], mapFocus, setMapFocus) => {
+    let summary = totals;
     data = data.map(d => {
-        Object.keys(summary)
-            .forEach(attr => summary[attr] += +d[attr])
         return Object.assign({},
             {
                 location:
@@ -35,7 +34,7 @@ export const SevereWeatherDataTable = (data = [], mapFocus, setMapFocus) => {
                     Object.keys(summary)
                         .map(attr => (
                             <div className={`px-6 py-5 text-sm font-medium text-center`}>
-                                <div className={`text-gray capitalize`}>{attr.replace(/_/g, ' ').replace(/num/g, 'total #')}</div>
+                                <div className={`text-gray-600 capitalize`}>{attr.replace(/_/g, ' ').replace(/num/g, 'total #')}</div>
                                 <div className={`text-lg`}>{summary[attr]}</div>
                             </div>
                         ))

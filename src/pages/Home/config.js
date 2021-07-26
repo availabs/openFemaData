@@ -16,7 +16,9 @@ export const DISASTER_ATTRIBUTES = [
     'pa_load_date',
     'ia_load_date',
     'total_obligated_amount_hmgp',
-    'last_refresh'
+    'last_refresh',
+    'incident_begin_date',
+    'incident_end_date',
 ];
 
 export const DISASTER_DECLARATIONS_ATTRIBUTES = [
@@ -109,7 +111,6 @@ export const groups = {
 */
 export const compareGroups = [
     {
-        title: 'Title 1',
         type: 'operation',
         disasterAttr: 'total_amount_ha_approved',
         summaryAttr: {type: 'operation::summaryAttr', attrs: ['Assistance given', 'personal_property_amount'], operation: '-'},

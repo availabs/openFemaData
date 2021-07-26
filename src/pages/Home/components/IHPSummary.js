@@ -1,5 +1,5 @@
 import React from "react";
-import {groups, SUMMARY_ATTRIBUTES} from "../utils";
+import {groups, SUMMARY_ATTRIBUTES} from "../config";
 import get from "lodash.get";
 import {fnum} from "utils/fnum";
 
