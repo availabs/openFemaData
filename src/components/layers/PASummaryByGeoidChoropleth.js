@@ -68,7 +68,7 @@ class PASummaryByGeoidChoroplethoptions extends LayerContainer {
             return features.reduce((a, feature) => {
                 return feature.layer.id === 'counties' ? [
                     ...a,
-                    [feature.properties.geoid,
+                    [get(this.geoNames[feature.properties.geoid], 'name', feature.properties.geoid),
                         get(this.data, [feature.properties.geoid], [])
                             .reduce((acc, f) => acc + +f[this.filters.attribute.value] , 0).toLocaleString()
                     ],
@@ -148,7 +148,7 @@ class PASummaryByGeoidChoroplethoptions extends LayerContainer {
             ['fema_disasters', 'byId', this.disasterNumber, 'byGeoid', 'all', 'pa_summary']
         ).then(d => {
             this.data = get(d, ['json', 'fema_disasters', 'byId', this.disasterNumber, 'byGeoid', 'all', 'pa_summary'], {})
-        })
+        }).then(() => falcor.get(['geo', Object.keys(this.data) , 'name']).then(names => this.geoNames = get(names, ['json', 'geo'], {})))
     }
 
     getColorScale(domain) {
