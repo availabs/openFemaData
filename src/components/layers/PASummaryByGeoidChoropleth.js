@@ -3,7 +3,7 @@ import get from "lodash.get"
 import center from '@turf/center'
 import {LayerContainer} from "@availabs/avl-map"
 import {getColorRange, useTheme} from "@availabs/avl-components";
-import {PA_SUMMARY_ATTRIBUTES} from 'pages/Home/config'
+import {PA_SUMMARY_ATTRIBUTES, PACategoriesMappings} from 'pages/Home/config'
 import {fnum} from "../../utils/fnum";
 import {ckmeans} from 'simple-statistics'
 
@@ -74,7 +74,7 @@ class PASummaryByGeoidChoroplethoptions extends LayerContainer {
                     ],
                     ...get(this.data, [feature.properties.geoid], [])
                         .reduce((acc, f) => {
-                            acc.push([f.damage_categories])
+                            acc.push([PACategoriesMappings[f.damage_categories]])
                             acc.push(...PA_SUMMARY_ATTRIBUTES.map(attr => [attr, (+get(f, [attr], 0)).toLocaleString()]))
                             return acc;
                         }, [])
