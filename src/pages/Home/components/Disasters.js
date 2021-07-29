@@ -1,7 +1,7 @@
 import get from "lodash.get";
 import React from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import {compareGroups, groups} from "../config";
+import {compareGroups, IHPGroups} from "../config";
 import {Link} from "react-router-dom";
 import {fnum} from "utils/fnum";
 import {getFinalValue} from "../dataUtils";
@@ -163,7 +163,7 @@ export const Disasters = (data, severeWeatherDataByDisaster, compareCols, setCom
                                                                 (
                                                                     <React.Fragment>
                                                                         <div className='text-gray-600'>{col}</div>
-                                                                        {fnum(groups[col].attributes.reduce((a, c) => a +
+                                                                        {fnum(IHPGroups[col].attributes.reduce((a, c) => a +
                                                                             (+get(disaster, [c, 'value'], 0)), 0))}
                                                                     </React.Fragment>
                                                                 ) :

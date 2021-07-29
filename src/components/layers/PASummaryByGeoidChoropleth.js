@@ -3,26 +3,26 @@ import get from "lodash.get"
 import center from '@turf/center'
 import {LayerContainer} from "@availabs/avl-map"
 import {getColorRange, useTheme} from "@availabs/avl-components";
-import {IHP_SUMMARY_ATTRIBUTES} from 'pages/Home/config'
+import {PA_SUMMARY_ATTRIBUTES} from 'pages/Home/config'
 import {fnum} from "../../utils/fnum";
 import {ckmeans} from 'simple-statistics'
 
-class IHPSummaryByZipChoroplethoptions extends LayerContainer {
+class PASummaryByGeoidChoroplethoptions extends LayerContainer {
     constructor(props) {
         super(props);
     }
 
-    setActive = !!this.viewId
-    name = 'IHP Summary By Zipcodes'
-    id = 'IHP Summary By Zipcodes'
+    // setActive = !!this.viewId
+    name = 'PA Summary By Geoids'
+    id = 'PA Summary By Geoids'
     data = []
     filters = {
         attribute: {
             name: "Attribute",
             type: "dropdown",
             multi: false,
-            value: 'ihp_amount',
-            domain: IHP_SUMMARY_ATTRIBUTES,
+            value: PA_SUMMARY_ATTRIBUTES[0],
+            domain: PA_SUMMARY_ATTRIBUTES,
             accessor: d => d.replace(/_/g, ' '),
         },
     }
@@ -37,7 +37,7 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
     }
 
     onHover = {
-        layers: ['zipcodes', 'events'],
+        layers: ['counties', 'events'],
         HoverComp: ({data, layer}) => {
             const theme = useTheme();
             return (
@@ -66,11 +66,18 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
         },
         callback: (layerId, features, lngLat) => {
             return features.reduce((a, feature) => {
-                return feature.layer.id === 'zipcodes' ? [
+                return feature.layer.id === 'counties' ? [
                     ...a,
-                    [feature.properties.geoid],
-                    ...Object.keys(get(this.data, [feature.properties.geoid], {}))
-                        .map(f => [f, get(this.data, [feature.properties.geoid, f], '')])
+                    [feature.properties.geoid,
+                        get(this.data, [feature.properties.geoid], [])
+                            .reduce((acc, f) => acc + +f[this.filters.attribute.value] , 0).toLocaleString()
+                    ],
+                    ...get(this.data, [feature.properties.geoid], [])
+                        .reduce((acc, f) => {
+                            acc.push([f.damage_categories])
+                            acc.push(...PA_SUMMARY_ATTRIBUTES.map(attr => [attr, (+get(f, [attr], 0)).toLocaleString()]))
+                            return acc;
+                        }, [])
                 ] : [
                     ...a,
                     ['Severe Weather Event'],
@@ -84,25 +91,25 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
 
     sources = [
         {
-            id: "zipcodes",
+            id: "counties",
             source: {
                 'type': "vector",
-                'url': 'mapbox://am3081.5g46sdxi'
+                'url': 'mapbox://am3081.a8ndgl5n'
             },
         },
     ]
 
     layers = [
         {
-            'id': 'zipcodes',
-            'source': 'zipcodes',
-            'source-layer': 'zipcodes',
+            'id': 'counties',
+            'source': 'counties',
+            'source-layer': 'counties',
             'type': 'fill',
         },
         {
-            'id': 'zipcodes-line',
-            'source': 'zipcodes',
-            'source-layer': 'zipcodes',
+            'id': 'counties-line',
+            'source': 'counties',
+            'source-layer': 'counties',
             'type': 'line',
             paint: {
                 "line-width": [
@@ -137,8 +144,10 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
     fetchData(falcor) {
         if (!this.disasterNumber) return Promise.resolve();
 
-        return falcor.get(['fema_disasters', 'byId', this.disasterNumber, 'byZip', 'ihp_summary']).then(d => {
-            this.data = get(d, ['json', 'fema_disasters', 'byId', this.disasterNumber, 'byZip', 'ihp_summary'], {})
+        return falcor.get(
+            ['fema_disasters', 'byId', this.disasterNumber, 'byGeoid', 'all', 'pa_summary']
+        ).then(d => {
+            this.data = get(d, ['json', 'fema_disasters', 'byId', this.disasterNumber, 'byGeoid', 'all', 'pa_summary'], {})
         })
     }
 
@@ -168,14 +177,16 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
     }
 
     paintMap(map) {
-        const colorScale = this.getColorScale(Object.values(this.data).map(d => d[this.filters.attribute.value]));
+        const colorScale = this.getColorScale(Object.values(this.data).reduce((acc,d) => {
+            acc.push(d.reduce((total, row) => total + +row[this.filters.attribute.value], 0));
+            return acc;
+        }, []));
         let colors = {};
 
         Object.values(this.data).forEach(d => {
-            colors[d.damaged_zip_code] = colorScale(d[this.filters.attribute.value]);
+            colors[d[0].geoid] = colorScale(d.reduce((total, row) => total + +row[this.filters.attribute.value], 0));
         });
-
-        map.setPaintProperty('zipcodes', 'fill-color',
+        map.setPaintProperty('counties', 'fill-color',
             ['get', ['get', 'geoid'], ['literal', colors]]);
     }
 
@@ -224,4 +235,4 @@ class IHPSummaryByZipChoroplethoptions extends LayerContainer {
     }
 }
 
-export const IHPSummaryByZipChoroplethFactory = (options = {}) => new IHPSummaryByZipChoroplethoptions(options)
+export const PASummaryByGeoidChoroplethFactory = (options = {}) => new PASummaryByGeoidChoroplethoptions(options)

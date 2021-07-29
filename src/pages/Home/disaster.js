@@ -6,12 +6,14 @@ import get from 'lodash.get'
 import {
 	DISASTER_ATTRIBUTES,
 	DISASTER_DECLARATIONS_ATTRIBUTES,
-	SUMMARY_ATTRIBUTES,
+	IHP_SUMMARY_ATTRIBUTES,
+	PA_SUMMARY_ATTRIBUTES,
 	SEVERE_WEATHER_ATTRIBUTES
 } from './config'
 
 import {Top} from './components/Top'
 import {IHPSummary} from './components/IHPSummary'
+import {PASummary} from './components/PASummary'
 import {SevereWeatherDataTable} from "./components/SevereWeatherDataTable";
 import {Declarations} from './components/Declarations'
 import {Map} from './components/Map'
@@ -47,7 +49,8 @@ const Home = ({ falcor, falcorCache, ...props }) => {
     React.useEffect(() => {
         return falcor.get(
         	['fema_disasters','byId', disasterNumber , DISASTER_ATTRIBUTES],
-        	['fema_disasters','byId', disasterNumber , 'ihp_summary', SUMMARY_ATTRIBUTES],
+        	['fema_disasters','byId', disasterNumber , 'ihp_summary', IHP_SUMMARY_ATTRIBUTES],
+        	['fema_disasters','byId', disasterNumber , 'pa_summary'],
         	['fema_disasters','byId', disasterNumber , 'byZip', 'ihp_summary'],
 			['fema_disasters', disasterNumber, 'declarations', 'length']
         ).then(dec => {
@@ -69,6 +72,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 				}, {}),
 
     		...get(falcorCache, ['fema_disasters', 'byId', disasterNumber, 'ihp_summary'], {}),
+    		paSummary: get(falcorCache, ['fema_disasters', 'byId', disasterNumber, 'pa_summary'], {}),
 			counties: [],
 			earliestEventStart: null,
 			latestEventEnd: null
@@ -121,6 +125,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 	  		<div className="w-full max-w-7xl mx-auto">
 				{Top(disaster, disasterNumber, groupEnabled, setGroupEnabled)}
 				{IHPSummary(disaster, groupEnabled)}
+				{PASummary(disaster, groupEnabled)}
 				{Map(disasterNumber, severeWeatherDataTotals.num_episodes ? severeWeatherData : [], mapFocus)}
 				{SevereWeatherDataTable(severeWeatherDataTotals, severeWeatherDataTotals.num_episodes ? severeWeatherData : [], mapFocus, setMapFocus)}
 				{Declarations(disaster)}

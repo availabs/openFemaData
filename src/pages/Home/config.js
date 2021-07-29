@@ -35,7 +35,7 @@ export const DISASTER_DECLARATIONS_ATTRIBUTES = [
     'designated_area'
 ];
 
-export const SUMMARY_ATTRIBUTES = [
+export const IHP_SUMMARY_ATTRIBUTES = [
     "num_valid_registrations",
     "ihp_amount",
     "ha_amount",
@@ -52,6 +52,14 @@ export const SUMMARY_ATTRIBUTES = [
     "roof_damage_amount",
 ];
 
+export const PA_SUMMARY_ATTRIBUTES = [
+    // 'damage_categories',
+    // 'num_valid_registrations',
+    'project_amount',
+    'total_obligated',
+    // 'federal_share_obligated'
+]
+
 export const SEVERE_WEATHER_ATTRIBUTES = [
     'geom',
     'num_events',
@@ -65,7 +73,7 @@ export const SEVERE_WEATHER_ATTRIBUTES = [
     'episode_narrative',
     'event_narrative'
 ]
-export const groups = {
+export const IHPGroups = {
     'Total': {
         attributes: ["ihp_amount"],
         color: '#333'
@@ -89,6 +97,31 @@ export const groups = {
     }
 }
 
+export const PAGroups = {
+    'AB': {
+        categories: ['A', 'B'],
+        color: '#ea8282'
+    },
+    'C - G': {
+        categories: ['C', 'D', 'E', 'F', 'G'],
+        color: '#82eada'
+    },
+    'Z': {
+        categories: ['Z'],
+        color: '#d782ea'
+    },
+}
+
+export const PACategoriesMappings = {
+    A:'Debris Removal',
+    B:'Protective Measures',
+    C:'Roads and Bridges',
+    D:'Water Control Facilities',
+    E:'Public Buildings',
+    F:'Public Utilities',
+    G:'Recreational or Other',
+    Z:'State Management'
+}
 
 /*
     There are two types of column configs:

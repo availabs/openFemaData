@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
 import { Transition } from '@headlessui/react'
-import { groups, SUMMARY_ATTRIBUTES, DISASTER_ATTRIBUTES } from "../config";
+import { IHPGroups, IHP_SUMMARY_ATTRIBUTES, DISASTER_ATTRIBUTES } from "../config";
 
 const nav = (activeNav, setActiveNav) => {
     const tabs = ['Groups', 'Custom']
@@ -49,7 +49,7 @@ const RenderGroups = (compareCols, setCompareCols, visible = false) => {
     return (
         <div className={`space-y-3 ${visible ? `block` : `hidden`}`}>
             {
-                Object.keys(groups)
+                Object.keys(IHPGroups)
                     .map(g => (
                         <div
                             className={`bg-blue-300 hover:bg-blue-500 width-auto inline-block p-3 ml-0 m-3 cursor-pointer transform ease-out duration-300 transition`}
@@ -152,7 +152,7 @@ const RenderCustom = (compareCols, setCompareCols, visible = false) => {
 
             <div className={summaryAttrVisible ? `block` : `hidden`}>
                 {
-                    Object.keys(groups).map(g => (
+                    Object.keys(IHPGroups).map(g => (
                         <div
                             className={`bg-indigo-300 hover:bg-indigo-500 width-auto inline-block p-3 ml-0 m-3 cursor-pointer transform ease-out duration-300 transition`}
                             onClick={() => {
@@ -163,7 +163,7 @@ const RenderCustom = (compareCols, setCompareCols, visible = false) => {
                     ))
                 }
                 {
-                    SUMMARY_ATTRIBUTES.map(g => (
+                    IHP_SUMMARY_ATTRIBUTES.map(g => (
                         <div
                             className={`bg-blue-300 hover:bg-blue-500 width-auto inline-block p-3 ml-0 m-3 cursor-pointer transform ease-out duration-300 transition`}
                             onClick={() => {
