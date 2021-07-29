@@ -3,14 +3,13 @@ import get from "lodash.get";
 import _ from "lodash";
 import {
     DISASTER_ATTRIBUTES,
-    DISASTER_DECLARATIONS_ATTRIBUTES, groups,
+    DISASTER_DECLARATIONS_ATTRIBUTES, IHPGroups,
     SEVERE_WEATHER_ATTRIBUTES,
-    SUMMARY_ATTRIBUTES
+    IHP_SUMMARY_ATTRIBUTES
 } from './config';
 
 export const LoadFEMADisasters = (falcor, falcorCache, setLoadingIHPSummaryData, loadingIHPSummaryData) => {
     return React.useEffect(() => {
-        console.log('FD')
         async function fetchData() {
             return falcor.get(['fema_disasters', 'length'])
                 .then(async res => {
@@ -36,10 +35,10 @@ export const LoadFEMADisasters = (falcor, falcorCache, setLoadingIHPSummaryData,
 
                                 return falcor.get(
                                     ['fema_disasters', c, 'declarations', 'length'],
-                                    ['fema_disasters', 'byId', c, 'ihp_summary', SUMMARY_ATTRIBUTES],
-                                    ['fema', 'disasters', 'byId', c, DISASTER_ATTRIBUTES],
-                                    ['fema', 'disasters', c, 'declarations', 'length']
-                                )/*.then(() => fetchDecData(falcor, falcorCache, loadingIHPSummaryData))*/
+                                    ['fema_disasters', 'byId', c, 'ihp_summary', IHP_SUMMARY_ATTRIBUTES],
+                                    ['fema_disasters', 'byId', c, DISASTER_ATTRIBUTES],
+                                    ['fema_disasters', c, 'declarations', 'length']
+                                )
                             })
                         }, Promise.resolve());
                     }
@@ -52,7 +51,7 @@ export const LoadFEMADisasters = (falcor, falcorCache, setLoadingIHPSummaryData,
 }
 const fetchDecData = (falcor, falcorCache, loadingIHPSummaryData) => {
     if (loadingIHPSummaryData.progress > 95 && loadingIHPSummaryData.type === 'FEMA Disasters') {
-        let disasters = get(falcorCache, ['fema', 'disasters'], {});
+        let disasters = get(falcorCache, ['fema_disasters'], {});
         let reqs = [];
         Object.keys(disasters)
             .forEach(disasterNumber => {
@@ -60,7 +59,7 @@ const fetchDecData = (falcor, falcorCache, loadingIHPSummaryData) => {
                 if(declarationLength > 50){
                     for(let i = 0; i < declarationLength; i += 50){
                         reqs.push(
-                            ['fema', 'disasters', disasterNumber, 'declarations', 'byIndex',
+                            ['fema_disasters', disasterNumber, 'declarations', 'byIndex',
                                 {from: i, to: Math.min(i+49, declarationLength - 1)},
                                 DISASTER_DECLARATIONS_ATTRIBUTES
                             ]
@@ -68,7 +67,7 @@ const fetchDecData = (falcor, falcorCache, loadingIHPSummaryData) => {
                     }
                 }else{
                     reqs.push(
-                        ['fema', 'disasters', disasterNumber, 'declarations', 'byIndex',
+                        ['fema_disasters', disasterNumber, 'declarations', 'byIndex',
                             {from: 0, to: declarationLength - 1},
                             DISASTER_DECLARATIONS_ATTRIBUTES
                         ]
@@ -172,8 +171,8 @@ export const getFinalValue = (disaster, col) => {
             get(disaster, [attr], 0) :
             getFinalValue(disaster, attr),
         summaryAttr: (attr) => typeof attr === "string" ?
-            Object.keys(groups).includes(attr) ?
-                groups[attr].attributes.reduce((a, c) => a + (+get(disaster, [c, 'value'], 0)), 0)
+            Object.keys(IHPGroups).includes(attr) ?
+                IHPGroups[attr].attributes.reduce((a, c) => a + (+get(disaster, [c, 'value'], 0)), 0)
                 : get(disaster, [attr, 'value'], 0) :
             getFinalValue(disaster, attr)
     }

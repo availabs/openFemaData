@@ -1,5 +1,5 @@
 import React from "react";
-import {groups, SUMMARY_ATTRIBUTES} from "../config";
+import {IHPGroups, IHP_SUMMARY_ATTRIBUTES} from "../config";
 import get from "lodash.get";
 import {fnum} from "utils/fnum";
 
@@ -10,32 +10,32 @@ export const IHPSummary = (disaster, groupEnabled) => {
             <div className={`border-t border-gray-200 bg-white grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-${groupEnabled ? `1` : `6`} sm:divide-y-0 sm:divide-x`}>
                 {
                     groupEnabled ?
-                        Object.keys(groups)
+                        Object.keys(IHPGroups)
                             .map(group => {
                                 return (
                                     <div className="px-6 py-5 text-sm font-medium space-x-0 sm:space-x-5"
                                          >
                                         <div className={`block sm:inline-block`}>
                                             <div className='text-white rounded' style={{
-                                             background: groups[group].color
+                                             background: IHPGroups[group].color
                                          }}>{group}</div>
                                             <div className='text-lg'>
                                                 {
-                                                    groups[group].attributes.reduce((a,c) => a + get(disaster, [c, 'value'], 0) , 0).toLocaleString()
+                                                    IHPGroups[group].attributes.reduce((a, c) => a + get(disaster, [c, 'value'], 0) , 0).toLocaleString()
                                                 }
                                             </div>
                                             <div className='text-gray-600'>
                                                         {
-                                                            fnum(groups[group].attributes.reduce((a,c) => a + get(disaster, [c, 'value'], 0) , 0))
+                                                            fnum(IHPGroups[group].attributes.reduce((a, c) => a + get(disaster, [c, 'value'], 0) , 0))
                                                         }
                                             </div>
                                         </div>
 
                                         {
-                                            groups[group].attributes.map(attr => (
+                                            IHPGroups[group].attributes.map(attr => (
                                                 <div className={`block sm:inline-block`}>
                                                     <div className='text-white rounded' style={{
-                                             background: groups[group].color
+                                             background: IHPGroups[group].color
                                          }}>{attr.replace(	/_/g, ' ')}</div>
                                                     <div className='text-lg'>
                                                         {
@@ -54,11 +54,11 @@ export const IHPSummary = (disaster, groupEnabled) => {
                                     </div>
                                 )
                             }):
-                        SUMMARY_ATTRIBUTES.map(attr => (
+                        IHP_SUMMARY_ATTRIBUTES.map(attr => (
                             <div className="px-6 py-5 text-sm font-medium text-center"
                                  >
                                 <div className='text-white rounded' style={{
-                                     background: get(Object.values(groups).filter(g => g.attributes.includes(attr)), [0, 'color'])
+                                     background: get(Object.values(IHPGroups).filter(g => g.attributes.includes(attr)), [0, 'color'])
                                  }}>{attr.replace(	/_/g, ' ')}</div>
                                 <div className='text-lg'>
                                     {
