@@ -1,0 +1,28 @@
+const tables = {
+    details: {
+        name: 'details',
+        schema: 'severe_weather_new',
+        columns: [
+            'begin_yearmonth', 'begin_day', 'begin_time', 'end_yearmonth', 'end_day', 'end_time', 'episode_id', 'event_id',
+            'state', 'state_fips', 'year', 'month_name', 'event_type', 'cz_type', 'cz_fips', 'cz_name', 'wfo', 'begin_date_time',
+            'cz_timezone', 'end_date_time', 'injuries_direct', 'injuries_indirect', 'deaths_direct', 'deaths_indirect', 'damage_property',
+            'damage_crops', 'source', 'magnitude', 'magnitude_type', 'flood_cause', 'category', 'tor_f_scale', 'tor_length', 'tor_width',
+            'tor_other_wfo', 'tor_other_cz_state', 'tor_other_cz_fips', 'tor_other_cz_name', 'begin_range', 'begin_azimuth', 'begin_location',
+            'end_range', 'end_azimuth', 'end_location', 'begin_lat', 'begin_lon', 'end_lat', 'end_lon', 'episode_narrative', 'event_narrative',
+            'data_source', 'begin_coords_geom', 'end_coords_geom', 'property_damage', 'crop_damage', 'geoid', 'cousub_geoid'
+        ],
+        numericColumns: [
+            'begin_yearmonth', 'begin_day', 'begin_time', 'end_yearmonth', 'end_day', 'end_time', 'episode_id', 'event_id',
+            'state_fips', 'year', 'cz_fips', 'injuries_direct', 'injuries_indirect',
+            'deaths_direct', 'deaths_indirect', 'magnitude', 'tor_length', 'tor_width', 'begin_range', 'end_range',
+
+        ],
+        other: [
+           'begin_date_time', 'end_date_time', 'begin_lat', 'begin_lon', 'end_lat', 'end_lon'
+        ],
+    }
+}
+
+module.exports = {
+    tables
+}
