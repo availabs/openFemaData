@@ -15,13 +15,43 @@ const tables = {
             'begin_yearmonth', 'begin_day', 'begin_time', 'end_yearmonth', 'end_day', 'end_time', 'episode_id', 'event_id',
             'state_fips', 'year', 'cz_fips', 'injuries_direct', 'injuries_indirect',
             'deaths_direct', 'deaths_indirect', 'magnitude', 'tor_length', 'tor_width', 'begin_range', 'end_range',
+            'begin_lat', 'begin_lon', 'end_lat', 'end_lon'
 
         ],
-        other: [
-           'begin_date_time', 'end_date_time', 'begin_lat', 'begin_lon', 'end_lat', 'end_lon'
+        dateColumns: [
+           'begin_date_time', 'end_date_time'
         ],
-    }
+    },
+    fatalities: {
+        name: 'fatalities',
+        schema: 'severe_weather_new',
+        columns: [
+            'fat_yearmonth', 'fat_day', 'fat_time', 'fatality_id', 'event_id', 'fatality_age', 'event_yearmonth',
+            'fatality_type', 'fatality_sex', 'fatality_location', 'fatality_date'
+        ],
+        numericColumns: [
+            'fat_yearmonth', 'fat_day', 'fat_time', 'fatality_id', 'event_id', 'fatality_age', 'event_yearmonth'
+        ],
+        dateColumns: [
+            'fatality_date',
+        ],
+    },
+    locations: {
+        name: 'locations',
+        schema: 'severe_weather_new',
+        columns: [
+            'yearmonth', 'episode_id', 'event_id', 'location_index', 'range', 'latitude', 'longitude', 'lat2', 'lon2',
+            'azimuth', 'location', 'coords_geom'
+        ],
+        numericColumns: [
+            'yearmonth', 'episode_id', 'event_id', 'location_index', 'range', 'latitude', 'longitude', 'lat2', 'lon2'
+        ],
+        other: [
+            'coords_geom'
+        ],
+    },
 }
+
 
 module.exports = {
     tables

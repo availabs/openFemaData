@@ -13,7 +13,7 @@ const getFiles = async () => {
 
             statsTable.each(function () {
                 let row =  $(this).find('td').text();
-                if(row.includes('StormEvents_details')){
+                if(row.includes('StormEvents')){
                     let tmpStr = row.split('StormEvents_')[1].split('-');
                     let table = tmpStr[0];
                     // let year = tmpStr[1].split('_d')[1].split('_')[0];

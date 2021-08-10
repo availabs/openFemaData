@@ -16,11 +16,12 @@ const fetchFileList = (fileName, currTable) => {
 			response.pipe(file);
 			console.log('got: ', url + fileName)
 			file.on('finish', f => {
-				resolve(execSync(`gunzip ${currTable + '/' + fileName}`, { encoding: 'utf-8' }));
 				file.close();
 				file.once('close', () => {
 					file.removeAllListeners();
 				});
+
+				resolve(execSync(`gunzip ${currTable + '/' + fileName}`, { encoding: 'utf-8' }));
 			})
 		})
 	})
@@ -28,7 +29,8 @@ const fetchFileList = (fileName, currTable) => {
 
 const main = async () => {
 	let files = await getFiles();
-	await /*Object.keys(files)*/['details']
+	console.log('downloading', process.argv[2])
+	await [process.argv[2]] /*Object.keys(files)*/
 		.reduce(async (accTable, currTable) => {
 			await accTable;
 
@@ -40,4 +42,4 @@ const main = async () => {
 		}, Promise.resolve())
 }
 
-main().then(() => console.log('done!'));
+main().then(() => console.log('download complete!'));
