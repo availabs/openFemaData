@@ -15,7 +15,7 @@ const loadFiles = (table) => {
 
     return files
         .reduce(async (acc, file, fileI) => {
-            // if(fileI < 65) return Promise.resolve();
+            // if(fileI < 48) return Promise.resolve();
             await acc;
             return new Promise((resolve, reject) => {
                 console.log(`file ${++fileI} of ${files.length} ${fileI*100/files.length}% ${file}`)
@@ -30,16 +30,19 @@ const loadFiles = (table) => {
                             .map((d2) => {
                                 return d2.reduce((acc, value, index) => {
                                     acc[headers[index]] =
-                                            tables[table].numericColumns.includes(headers[index]) && [null, '', ' ', undefined].includes(value) ?
+                                            (tables[table].numericColumns || []).includes(headers[index]) && [null, '', ' ', undefined].includes(value) ?
                                                 0 :
-                                                tables[table].dateColumns.includes(headers[index]) && [0, '0'].includes(value) ?
+                                                (tables[table].dateColumns || []).includes(headers[index]) && [0, '0'].includes(value) ?
                                                     null :
-                                                    tables[table].numericColumns.includes(headers[index]) && typeof value !== "number" && value ?
+                                                    (tables[table].numericColumns || []).includes(headers[index]) && typeof value !== "number" && value ?
                                                         parseInt(value) :
-                                                            value
+                                                            (tables[table].floatColumns || []).includes(headers[index]) && typeof value !== "number" && value ?
+                                                                parseFloat(value) :
+                                                                    value
                                     return acc;
                                 }, {})
                             });
+
                     resolve(_.chunk(values, 500)
                             .reduce(async (accChunk, chunk, chunkI) => {
                                 await accChunk;

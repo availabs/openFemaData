@@ -1,5 +1,5 @@
-import sys
 import pandas as pd
+import sys
 from os import listdir
 from os.path import isfile, join
 
@@ -66,10 +66,18 @@ def process():
 
         csv.astype(convert_dict)
 
-        if sys.argv[1] is 'details':
-            csv['EVENT_NARRATIVE'] = csv['EVENT_NARRATIVE'].astype('string').str.replace('\n', ' ').str.replace('|', '')
-            csv['EPISODE_NARRATIVE'] = csv['EPISODE_NARRATIVE'].astype('string').str.replace('\n', ' ').str.replace('|',
-                                                                                                                    '')
+        if sys.argv[1] == 'details':
+            csv['EVENT_NARRATIVE'] = \
+                csv['EVENT_NARRATIVE'] \
+                    .astype('string') \
+                    .str.replace('\n', ' ') \
+                    .str.replace('|', '')
+
+            csv['EPISODE_NARRATIVE'] = \
+                csv['EPISODE_NARRATIVE'] \
+                    .astype('string') \
+                    .str.replace('\n', ' ') \
+                    .str.replace('|', '')
 
         csv.to_csv(path_or_buf=path + fileName, sep='|', index=False)
 

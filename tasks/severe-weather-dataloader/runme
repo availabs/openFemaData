@@ -6,4 +6,5 @@ python dataCleaning.py fatalities &&
 python dataCleaning.py locations &&
 node upload.js details &&
 node upload.js fatalities && 
-node upload.js locations
+node upload.js locations &&
+node postUploadProcessing.js
