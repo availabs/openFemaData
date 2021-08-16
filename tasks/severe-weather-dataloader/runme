@@ -1,0 +1,10 @@
+node download.js details &&
+node download.js fatalities &&
+node download.js locations && 
+python dataCleaning.py details &&
+python dataCleaning.py fatalities &&
+python dataCleaning.py locations &&
+node upload.js details &&
+node upload.js fatalities && 
+node upload.js locations &&
+node postUploadProcessing.js
