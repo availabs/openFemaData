@@ -99,8 +99,8 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 
     React.useEffect(() => {
     	if(disaster.earliestEventStart && disaster.latestEventEnd){
-			let date1 = `${disaster.earliestEventStart.getFullYear()}-${disaster.earliestEventStart.getMonth()+1}-${disaster.earliestEventStart.getDate()}`;
-			let date2 = `${disaster.latestEventEnd.getFullYear()}-${disaster.latestEventEnd.getMonth()+1}-${disaster.latestEventEnd.getDate()}`;
+			let date1 = `${disaster.earliestEventStart.getFullYear()}-${disaster.earliestEventStart.getMonth()+1}-${disaster.earliestEventStart.getDate()} ${disaster.earliestEventStart.getHours()}:${disaster.earliestEventStart.getMinutes()}:${disaster.earliestEventStart.getSeconds()}`;
+			let date2 = `${disaster.latestEventEnd.getFullYear()}-${disaster.latestEventEnd.getMonth()+1}-${disaster.latestEventEnd.getDate()} ${disaster.latestEventEnd.getHours()}:${disaster.latestEventEnd.getMinutes()}:${disaster.latestEventEnd.getSeconds()}`;
 			return falcor.get(
 				['severeWeather', disaster.counties, 'byTimeStampRange', date1, date2, get(disaster, ['disaster_type', 'value'], 'hurricane'), SEVERE_WEATHER_ATTRIBUTES],
 				['severeWeather', 'byDisaster', disasterNumber, SEVERE_WEATHER_ATTRIBUTES]

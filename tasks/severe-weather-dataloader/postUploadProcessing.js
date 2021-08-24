@@ -86,11 +86,34 @@ const updateGeoCounties = async () => {
     return db.query(query);
 }
 
+const updateGeoCousubs = async () => {
+    let query = `
+        with t as (
+            select event_id, st_transform(begin_coords_geom, 4269) geom
+            from severe_weather_new.details
+            where cousub_geoid is null
+              and begin_coords_geom is not null
+        ),
+             s as (
+                 SELECT event_id, geoid
+                 FROM geo.tl_2017_cousub a
+                          join t
+                               on st_contains(a.geom, t.geom)
+             )
+
+        update severe_weather_new.details dst
+        set cousub_geoid = s.geoid from s
+        where dst.event_id = s.event_id
+    `
+    return db.query(query);
+}
+
 const postProcess = async () => {
     // await updateCoords();
     // await updateDamage();
     // await updateGeoTracts();
     // await updateGeoCounties();
+    await updateGeoCousubs();
 }
 
 postProcess()
