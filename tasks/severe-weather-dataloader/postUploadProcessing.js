@@ -108,12 +108,25 @@ const updateGeoCousubs = async () => {
     return db.query(query);
 }
 
+const updateGeoZzone = async () => {
+    let query = `
+        UPDATE severe_weather_new.details d
+        SET geoid = lpad(fips::text, 5, '0')
+        FROM severe_weather.zone_to_county z
+        WHERE z.zone = d.cz_fips
+        AND begin_lat = '0'
+        AND cz_type = 'Z'
+    `
+    return db.query(query);
+}
+
 const postProcess = async () => {
     // await updateCoords();
     // await updateDamage();
     // await updateGeoTracts();
     // await updateGeoCounties();
-    await updateGeoCousubs();
+    // await updateGeoCousubs();
+    // await updateGeoZzone();
 }
 
 postProcess()
