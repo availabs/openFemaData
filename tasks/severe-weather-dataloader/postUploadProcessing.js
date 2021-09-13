@@ -108,7 +108,17 @@ const updateGeoCousubs = async () => {
     return db.query(query);
 }
 
+const removeGeoidZzone = async () => {
+    let query = `
+    UPDATE severe_weather_new.details d
+        SET geoid = null
+        WHERE begin_lat = '0'
+        AND cz_type = 'Z'
+        `
+    return db.query(query)
+}
 const updateGeoZzone = async () => {
+    // todo first set geoid to null for Z, where begin_coords = 0 (removeGeoidZzone), then run the following
     let query = `
         UPDATE severe_weather_new.details d
         SET geoid = lpad(fips::text, 5, '0')
@@ -120,13 +130,24 @@ const updateGeoZzone = async () => {
     return db.query(query);
 }
 
+const updateGeoMzone = async () => {
+    let query = `
+        update severe_weather_new.details
+        set geoid = null
+        where cz_type = 'M'
+    `
+    return db.query(query);
+}
+
 const postProcess = async () => {
     // await updateCoords();
     // await updateDamage();
     // await updateGeoTracts();
     // await updateGeoCounties();
     // await updateGeoCousubs();
+    // await removeGeoidZzone();
     // await updateGeoZzone();
+    // await updateGeoMzone();
 }
 
 postProcess()
