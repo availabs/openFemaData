@@ -84,6 +84,18 @@ const Merge = (props) => {
             // .filter(f => f.swd_loss !== 0 || f.ofd_loss !== 0)
     }, [data])
 
+
+    // const sortedHaz = data.indexValues["hazard"]
+    //     .sort((a,b) =>
+    //         mergedByHazardByYear.filter(m => m.hazard === b && (m.swd_loss !== 0 || m.ofd_loss !== 0)).length -
+    //         mergedByHazardByYear.filter(m => m.hazard === a && (m.swd_loss !== 0 || m.ofd_loss !== 0)).length
+    //     )
+    // console.log(sortedHaz.map(h => `'${h}'`).join(','))
+
+    const sortedHaz = ['tornado','hail','wind','coldwave','Dense Fog','Heavy Rain','hurricane','icestorm','lightning',
+        'riverine','wildfire','winterweat','coastal','drought','Dust Storm','Dust Devil','landslide','avalanche',
+        'heatwave','tsunami','Freezing Fog','earthquake','Dense Smoke','volcano','Astronomical Low Tide','Dam/Levee Break',
+        'Marine Dense Fog','Northern Lights','OTHER']
     return (
         <AdminLayout>
             <div className="w-full max-w-7xl mx-auto">
@@ -109,10 +121,10 @@ const Merge = (props) => {
 
                 <div className="pt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
                     {
-                        data.indexValues["hazard"]
+                        sortedHaz
                             .map(hazard => (
                                 <div className='pt-4 pb-3 px-2 bg-white'>
-                                    {hazard}
+                                    <label className={'font-bold'}>  {hazard} </label>
                                     <div className='p-2' style={{height:'300px'}}>
                                         {mergedByHazardByYear.length ? <BarGraph
                                             data={mergedByHazardByYear.filter(m => m.hazard === hazard)}
