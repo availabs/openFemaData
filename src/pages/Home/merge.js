@@ -22,7 +22,7 @@ const mergeData = ({swd, ofd, index, indexValues}) => {
 
     indexValues[index].forEach((iv, i) => {
         result.push({
-            [index]: index === 'year' ? iv : i,
+            [index]: iv,
             swd_loss: get(swd.filter(s => s[index] === iv), [0, 'total_damage'], 0),
             ofd_loss: get(ofd.filter(o => o[index] === iv), [0, 'total_loss'], 0)
         })
@@ -107,9 +107,9 @@ const Merge = (props) => {
                     <div className='p-2' style={{height:'500px'}}>
                         {merged.length ? <BarGraph
                             data={merged}
-                            keys={[attr, 'swd_loss', 'ofd_loss']}
+                            keys={['swd_loss', 'ofd_loss']}
                             indexBy={attr}
-                            axisBottom={true}
+                            axisBottom={d => d}
                             axisLeft={{format: fnum}}
                             indexFormat={fnum}
                             valueFormat={fnum}
@@ -129,8 +129,8 @@ const Merge = (props) => {
                                         {mergedByHazardByYear.length ? <BarGraph
                                             data={mergedByHazardByYear.filter(m => m.hazard === hazard)}
                                             keys={['swd_loss', 'ofd_loss']}
-                                            indexBy={attr}
-                                            axisBottom={true}
+                                            indexBy={'year'}
+                                            axisBottom={d => d}
                                             axisLeft={{format: fnum}}
                                             indexFormat={fnum}
                                             valueFormat={fnum}
