@@ -7,7 +7,7 @@ export const RenderMap = (data) => {
     const Layers = React.useRef([MergeDataFactory()]);
 
     return (
-        <div className='flex-1 flex flex-col pt-5 shadow-lg' style={{height: '500px'}}>
+        <div className='flex-1 flex flex-col pt-5 shadow-lg' style={{height: '800px'}}>
             <AvlMap
                 accessToken={ MAPBOX_TOKEN }
                 layers={ Layers.current }

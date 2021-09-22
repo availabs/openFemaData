@@ -22,7 +22,7 @@ class mergeData extends LayerContainer {
             name: "Dataset",
             type: "dropdown",
             multi: false,
-            value: ['Severe Weather'],
+            value: ['Difference (swd - ofd)'],
             domain: ['Severe Weather', 'Open Fema', 'Difference (swd - ofd)'],
         },
         year: {
@@ -203,10 +203,19 @@ class mergeData extends LayerContainer {
             let swd = this.data['swd'][grouping],
                 ofd = this.data['ofd'][grouping];
 
+            const filterAttrs = (data, geoid) =>
+                data.geoid === geoid &&
+                (
+                    grouping.split('.')
+                        .filter(g => g !== 'geoid')
+                        .reduce((acc, curr) => acc && data[curr] === this.filters[curr].value, true)
+                )
+
             get(this.data, 'indexValues.geoid', [])
                 .forEach(geoid => {
-                    let swdLoss = get(swd.filter(s => s.geoid === geoid), [0, 'total_damage'], 0),
-                        ofdLoss = get(ofd.filter(o => o.geoid === geoid), [0, 'total_loss'], 0)
+                    let swdLoss = parseFloat(get(swd.filter(s => filterAttrs(s, geoid)), [0, 'total_damage'], 0)),
+                        ofdLoss = parseFloat(get(ofd.filter(o => filterAttrs(o, geoid)), [0, 'total_loss'], 0))
+
                     tmpData.push(
                         {
                             geoid,
@@ -217,15 +226,19 @@ class mergeData extends LayerContainer {
                     )
                 })
 
+            this.data = tmpData
+
         }else{
-            tmpData = this.data[mapping[this.filters.dataset.value]][grouping]
+            tmpData = this.data[mapping[this.filters.dataset.value]][grouping];
+
+            this.data =
+                grouping.split('.')
+                    .filter(g => g !== 'geoid')
+                    .reduce((acc, curr) =>
+                            acc.filter(a => a[curr] === this.filters[curr].value)
+                        , tmpData)
         }
-        this.data =
-            grouping.split('.')
-                .filter(g => g !== 'geoid')
-                .reduce((acc, curr) =>
-                    acc.filter(a => a[curr] === this.filters[curr].value)
-                , tmpData)
+
 
         this.paintMap(map, this.data);
     }
