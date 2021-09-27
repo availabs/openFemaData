@@ -123,6 +123,20 @@ export const PACategoriesMappings = {
     Z:'State Management'
 }
 
+export const SBAGroups = {
+    'Total' : {
+        categories: ['home', 'business'],
+        color: '#9945f3'
+    },
+    'Home' : {
+        categories: ['home'],
+        color: '#ecadad'
+    },
+    'Business' : {
+        categories: ['business'],
+        color: '#9b9cda'
+    },
+}
 /*
     There are two types of column configs:
 

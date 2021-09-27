@@ -14,6 +14,7 @@ import {
 import {Top} from './components/Top'
 import {IHPSummary} from './components/IHPSummary'
 import {PASummary} from './components/PASummary'
+import {SBA} from './components/SBA'
 import {SevereWeatherDataTable} from "./components/SevereWeatherDataTable";
 import {Declarations} from './components/Declarations'
 import {Map} from './components/Map'
@@ -52,7 +53,8 @@ const Home = ({ falcor, falcorCache, ...props }) => {
         	['fema_disasters','byId', disasterNumber , 'ihp_summary', IHP_SUMMARY_ATTRIBUTES],
         	['fema_disasters','byId', disasterNumber , 'pa_summary'],
         	['fema_disasters','byId', disasterNumber , 'byZip', 'ihp_summary'],
-			['fema_disasters', disasterNumber, 'declarations', 'length']
+			['fema_disasters', disasterNumber, 'declarations', 'length'],
+			['sba', 'events', 'byDisasterNumber', disasterNumber, 'byLoanType', ['business', 'home'], ['total_loss']]
         ).then(dec => {
 			let declarationLength = get(dec, ['json','fema_disasters', disasterNumber, 'declarations', 'length'], {});
 			falcor.get(['fema_disasters', disasterNumber, 'declarations', 'byIndex',
@@ -73,6 +75,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 
     		...get(falcorCache, ['fema_disasters', 'byId', disasterNumber, 'ihp_summary'], {}),
     		paSummary: get(falcorCache, ['fema_disasters', 'byId', disasterNumber, 'pa_summary'], {}),
+			sba: get(falcorCache, ['sba', 'events', 'byDisasterNumber', disasterNumber, 'byLoanType']),
 			counties: [],
 			earliestEventStart: null,
 			latestEventEnd: null
@@ -126,6 +129,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 				{Top(disaster, disasterNumber, groupEnabled, setGroupEnabled)}
 				{IHPSummary(disaster, groupEnabled)}
 				{PASummary(disaster, groupEnabled)}
+				{SBA(disaster)}
 				{Map(disasterNumber, severeWeatherDataTotals.num_episodes ? severeWeatherData : [], mapFocus)}
 				{SevereWeatherDataTable(severeWeatherDataTotals, severeWeatherDataTotals.num_episodes ? severeWeatherData : [], mapFocus, setMapFocus)}
 				{Declarations(disaster)}
