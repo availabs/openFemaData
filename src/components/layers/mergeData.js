@@ -8,7 +8,7 @@ import {ckmeans} from 'simple-statistics'
 
 const mapping = {
     'Severe Weather': 'swd',
-    'Open Fema': 'ofd',
+    'Open Fema': 'ofd_sba',
     'Difference (swd - ofd)': 'Difference'
 }
 class mergeData extends LayerContainer {
@@ -22,7 +22,7 @@ class mergeData extends LayerContainer {
             name: "Dataset",
             type: "dropdown",
             multi: false,
-            value: ['Difference (swd - ofd)'],
+            value: ['Open Fema'],
             domain: ['Severe Weather', 'Open Fema', 'Difference (swd - ofd)'],
         },
         year: {
@@ -153,10 +153,10 @@ class mergeData extends LayerContainer {
             ['swdOfdMerge', 'swd', 'geoid.hazard'],
             ['swdOfdMerge', 'swd', 'geoid.year'],
             ['swdOfdMerge', 'swd', 'geoid.hazard.year'],
-            ['swdOfdMerge', 'ofd', 'geoid'],
-            ['swdOfdMerge', 'ofd', 'geoid.hazard'],
-            ['swdOfdMerge', 'ofd', 'geoid.year'],
-            ['swdOfdMerge', 'ofd', 'geoid.hazard.year'],
+            ['swdOfdMerge', 'ofd_sba', 'geoid'],
+            ['swdOfdMerge', 'ofd_sba', 'geoid.hazard'],
+            ['swdOfdMerge', 'ofd_sba', 'geoid.year'],
+            ['swdOfdMerge', 'ofd_sba', 'geoid.hazard.year'],
         ).then(d => {
             this.data = get(d, 'json.swdOfdMerge', {})
             this.filters.year.domain = ['All Time', ...get(d, 'json.swdOfdMerge.indexValues.year', [])]
@@ -182,7 +182,7 @@ class mergeData extends LayerContainer {
     paintMap(map, data) {
         const colorScale = this.getColorScale(data.map(d => +(d.total_damage || d.total_loss)));
         let colors = {};
-
+        console.log(colorScale, data)
         data.forEach(d => {
             colors[d.geoid] = colorScale(+(d.total_damage || d.total_loss));
         });
@@ -201,7 +201,7 @@ class mergeData extends LayerContainer {
         let tmpData = []
         if (mapping[this.filters.dataset.value] === 'Difference'){
             let swd = this.data['swd'][grouping],
-                ofd = this.data['ofd'][grouping];
+                ofd = this.data['ofd_sba'][grouping];
 
             const filterAttrs = (data, geoid) =>
                 data.geoid === geoid &&

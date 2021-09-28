@@ -1,4 +1,4 @@
-with county_to_state as (
+const open_fema_update_geoid = (table) => `with county_to_state as (
     SELECT stusps, county.geoid, county.name, county.namelsad
     FROM geo.tl_2017_us_county county
              JOIN geo.tl_2017_us_state state
@@ -8,11 +8,11 @@ with county_to_state as (
 )
 
 -- select county, state
--- from severe_weather_open_fema_data_merge.fema_presidential_disasters_annual_loss_by_county_by_hazard a
+-- from severe_weather_open_fema_data_merge.${table} a
 -- where geoid is null
 
 
-UPDATE severe_weather_open_fema_data_merge.fema_presidential_disasters_annual_loss_by_county_by_hazard a
+UPDATE severe_weather_open_fema_data_merge.${table} a
 set geoid = b.geoid
     from county_to_state b
 where a.state = b.stusps
@@ -28,4 +28,6 @@ where a.state = b.stusps
 -- JOIN geo.tl_2017_us_state state
 -- on county.statefp = state.geoid
 -- where lower(county.namelsad) like '%fort%'
--- order by county.statefp, countyfp
+-- order by county.statefp, countyfp`
+
+module.exports = open_fema_update_geoid
