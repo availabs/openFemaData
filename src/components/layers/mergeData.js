@@ -8,8 +8,10 @@ import {ckmeans} from 'simple-statistics'
 
 const mapping = {
     'Severe Weather': 'swd',
-    'Open Fema': 'ofd_sba',
-    'Difference (swd - ofd)': 'Difference'
+    'Open Fema': 'ofd',
+    'Open Fema + SBA': 'ofd_sba',
+    'Difference (swd - ofd)': 'Difference',
+    'Difference (swd - ofd + sba)': 'Difference with SBA'
 }
 class mergeData extends LayerContainer {
 
@@ -23,7 +25,7 @@ class mergeData extends LayerContainer {
             type: "dropdown",
             multi: false,
             value: ['Open Fema'],
-            domain: ['Severe Weather', 'Open Fema', 'Difference (swd - ofd)'],
+            domain: ['Severe Weather', 'Open Fema', 'Open Fema + SBA', 'Difference (swd - ofd)', 'Difference (swd - ofd + sba)'],
         },
         year: {
             name: "Year",
@@ -157,6 +159,11 @@ class mergeData extends LayerContainer {
             ['swdOfdMerge', 'ofd_sba', 'geoid.hazard'],
             ['swdOfdMerge', 'ofd_sba', 'geoid.year'],
             ['swdOfdMerge', 'ofd_sba', 'geoid.hazard.year'],
+            
+            ['swdOfdMerge', 'ofd', 'geoid'],
+            ['swdOfdMerge', 'ofd', 'geoid.hazard'],
+            ['swdOfdMerge', 'ofd', 'geoid.year'],
+            ['swdOfdMerge', 'ofd', 'geoid.hazard.year'],
         ).then(d => {
             this.data = get(d, 'json.swdOfdMerge', {})
             this.filters.year.domain = ['All Time', ...get(d, 'json.swdOfdMerge.indexValues.year', [])]
@@ -199,9 +206,9 @@ class mergeData extends LayerContainer {
             this.filters.hazard.value !== 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.hazard.year' : 'geoid'
 
         let tmpData = []
-        if (mapping[this.filters.dataset.value] === 'Difference'){
+        if (mapping[this.filters.dataset.value].includes('Difference')){
             let swd = this.data['swd'][grouping],
-                ofd = this.data['ofd_sba'][grouping];
+                ofd = this.data[mapping[this.filters.dataset.value].includes('SBA') ? 'ofd_sba' : 'ofd'][grouping];
 
             const filterAttrs = (data, geoid) =>
                 data.geoid === geoid &&
