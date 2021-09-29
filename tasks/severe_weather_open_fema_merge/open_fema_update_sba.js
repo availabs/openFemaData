@@ -1,6 +1,6 @@
 const reformat_open_fema_sba = (table) => `with t as (
     SELECT fema_disaster_number, substring(geoid, 1, 5) geoid, SUM(total_verified_loss) total_loss
-    FROM public.sba_disaster_loan_data
+    FROM public.sba_disaster_loan_data_new
     GROUP BY 1, 2
     ORDER BY 1, 2, 3
 )
