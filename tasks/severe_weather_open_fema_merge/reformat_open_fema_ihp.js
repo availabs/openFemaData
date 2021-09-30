@@ -1,5 +1,6 @@
+const reformat_open_fema_ihp = (table, sba) => `
 BEGIN;
-delete from severe_weather_open_fema_data_merge.fema_presidential_disasters_annual_loss_by_county_by_hazard;
+delete from severe_weather_open_fema_data_merge.${table};
 
 with pa_data as (
     select disaster_number, sum(coalesce(project_amount, 0)) project_amount
@@ -38,8 +39,8 @@ with pa_data as (
      )
 
 
-INSERT INTO severe_weather_open_fema_data_merge.fema_presidential_disasters_annual_loss_by_county_by_hazard
-select county, state, disaster_year, hazard, ihp_verified_loss, ha_loss, 0 as project_amount, total_loss,
+INSERT INTO severe_weather_open_fema_data_merge.${table}
+select county, state, disaster_year, hazard, ihp_verified_loss, ha_loss, 0 as project_amount, ${sba ? `0 as sba_loss,` : ``} total_loss,
        array_agg(distinct ihp_data.disaster_number) 						   as disaster_ids
 from ihp_data
 --     join pa_data
@@ -48,3 +49,6 @@ group by county, state, disaster_year, hazard, ihp_verified_loss, ha_loss, proje
 
 commit;
 end;
+`
+
+module.exports = reformat_open_fema_ihp

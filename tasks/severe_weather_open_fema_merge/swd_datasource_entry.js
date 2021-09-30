@@ -1,3 +1,4 @@
+const swd_datasource_entry = `
 INSERT INTO public.datasources(
     id, title,
     description, "table",
@@ -12,3 +13,6 @@ SELECT 13 id, 'Severe Weather Annual Loss by County By Hazard' title,
        (SELECT NOW()) last_refresh,
        null start_date, null end_date,
        (select count(1) record_count from severe_weather_open_fema_data_merge.severe_weather_annual_loss_by_county_by_hazard) record_count
+`
+
+module.exports = swd_datasource_entry

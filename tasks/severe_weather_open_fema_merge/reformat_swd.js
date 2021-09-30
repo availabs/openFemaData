@@ -1,3 +1,4 @@
+const reformat_swd = `
 INSERT INTO severe_weather_open_fema_data_merge.severe_weather_annual_loss_by_county_by_hazard
 select geoid, year,
     CASE
@@ -120,3 +121,6 @@ order by 1,2,3
 -- or property_damage != 0
 -- or crop_damage != 0
 
+`
+
+module.exports = reformat_swd

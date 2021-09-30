@@ -9,7 +9,9 @@ import {ckmeans} from 'simple-statistics'
 const mapping = {
     'Severe Weather': 'swd',
     'Open Fema': 'ofd',
-    'Difference (swd - ofd)': 'Difference'
+    'Open Fema + SBA': 'ofd_sba',
+    'Difference (swd - ofd)': 'Difference',
+    'Difference (swd - ofd + sba)': 'Difference with SBA'
 }
 class mergeData extends LayerContainer {
 
@@ -22,8 +24,8 @@ class mergeData extends LayerContainer {
             name: "Dataset",
             type: "dropdown",
             multi: false,
-            value: ['Difference (swd - ofd)'],
-            domain: ['Severe Weather', 'Open Fema', 'Difference (swd - ofd)'],
+            value: ['Open Fema'],
+            domain: ['Severe Weather', 'Open Fema', 'Open Fema + SBA', 'Difference (swd - ofd)', 'Difference (swd - ofd + sba)'],
         },
         year: {
             name: "Year",
@@ -153,6 +155,11 @@ class mergeData extends LayerContainer {
             ['swdOfdMerge', 'swd', 'geoid.hazard'],
             ['swdOfdMerge', 'swd', 'geoid.year'],
             ['swdOfdMerge', 'swd', 'geoid.hazard.year'],
+            ['swdOfdMerge', 'ofd_sba', 'geoid'],
+            ['swdOfdMerge', 'ofd_sba', 'geoid.hazard'],
+            ['swdOfdMerge', 'ofd_sba', 'geoid.year'],
+            ['swdOfdMerge', 'ofd_sba', 'geoid.hazard.year'],
+            
             ['swdOfdMerge', 'ofd', 'geoid'],
             ['swdOfdMerge', 'ofd', 'geoid.hazard'],
             ['swdOfdMerge', 'ofd', 'geoid.year'],
@@ -182,7 +189,7 @@ class mergeData extends LayerContainer {
     paintMap(map, data) {
         const colorScale = this.getColorScale(data.map(d => +(d.total_damage || d.total_loss)));
         let colors = {};
-
+        console.log(colorScale, data)
         data.forEach(d => {
             colors[d.geoid] = colorScale(+(d.total_damage || d.total_loss));
         });
@@ -199,9 +206,9 @@ class mergeData extends LayerContainer {
             this.filters.hazard.value !== 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.hazard.year' : 'geoid'
 
         let tmpData = []
-        if (mapping[this.filters.dataset.value] === 'Difference'){
+        if (mapping[this.filters.dataset.value].includes('Difference')){
             let swd = this.data['swd'][grouping],
-                ofd = this.data['ofd'][grouping];
+                ofd = this.data[mapping[this.filters.dataset.value].includes('SBA') ? 'ofd_sba' : 'ofd'][grouping];
 
             const filterAttrs = (data, geoid) =>
                 data.geoid === geoid &&

@@ -2,6 +2,7 @@ import React from "react";
 import get from "lodash.get";
 import {Toggle} from "../tools/Toggle";
 import {fnum} from "utils/fnum";
+import {SBAGroups} from "../config";
 
 export const Top = (disaster, disasterNumber, groupEnabled, setGroupEnabled) => {
     return (
@@ -31,7 +32,11 @@ export const Top = (disaster, disasterNumber, groupEnabled, setGroupEnabled) => 
                 <div className="px-6 py-5 text-sm font-medium text-center bg-gray-50">
                     <div className='text-gray-600'>Total</div>
                     <div className='text-lg'>
-                        {get(disaster, 'total_cost.value', '').toLocaleString()}
+                        {
+                            (parseFloat(get(disaster, 'total_cost.value', 0)) +
+                                SBAGroups['Total'].categories
+                                    .reduce((acc, loan) => acc + get(disaster, ['sba', loan, 'total_loss'], 0), 0))
+                                .toLocaleString()}
                     </div>
                     <div className='text-gray-600'>declarations</div>
                     <div>
@@ -42,7 +47,7 @@ export const Top = (disaster, disasterNumber, groupEnabled, setGroupEnabled) => 
                 <div className="px-6 py-5 text-sm font-medium text-center">
                     <div className='text-gray-600'>Total IHP</div>
                     <div className='text-lg'>
-                        { (get(disaster, 'total_amount_ihp_approved.value', '') || '0').toLocaleString()}
+                        { parseFloat(get(disaster, 'total_amount_ihp_approved.value', 0) || 0).toLocaleString()}
                     </div>
                     <div className='flex'>
                         <div className='text-lg flex-1'>
@@ -59,7 +64,7 @@ export const Top = (disaster, disasterNumber, groupEnabled, setGroupEnabled) => 
                 <div className="px-6 py-5 text-sm font-medium text-center">
                     <div className='text-gray-600'>Total PA</div>
                     <div className='text-lg'>
-                        { (get(disaster, 'total_obligated_amount_pa.value', '') || '0').toLocaleString()}
+                        { parseFloat(get(disaster, 'total_obligated_amount_pa.value', 0) || 0).toLocaleString()}
                     </div>
                     <div className='flex'>
                         <div className='text-lg flex-1'>
@@ -77,12 +82,18 @@ export const Top = (disaster, disasterNumber, groupEnabled, setGroupEnabled) => 
                 <div className="px-6 py-5 text-sm font-medium text-center">
                     <div className='text-gray-600'>Total HMGP</div>
                     <div className='text-lg'>
-                        { (get(disaster, 'total_obligated_amount_hmgp.value', '') || '0').toLocaleString()}
+                        { parseFloat(get(disaster, 'total_obligated_amount_hmgp.value', 0) || 0).toLocaleString()}
                     </div>
                 </div>
 
                 <div className="px-6 py-5 text-sm font-medium text-center">
-                    <div className='text-gray-600'>Severe Weather</div>
+                    <div className='text-gray-600'>SBA</div>
+                    <div className={'text-lg'}>
+                        {
+                            (SBAGroups['Total'].categories
+                                .reduce((acc, loan) => acc + get(disaster, ['sba', loan, 'total_loss'], 0), 0)).toLocaleString()
+                        }
+                    </div>
                 </div>
             </div>
         </React.Fragment>
