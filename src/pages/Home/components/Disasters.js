@@ -192,5 +192,5 @@ export const Disasters = (data, severeWeatherDataByDisaster, compareCols, setCom
         }
 
         return renderUI();
-    }, [compareCols, data.disasters, severeWeatherDataByDisaster, index])
+    }, [index, data.disasters, compareCols, severeWeatherDataByDisaster, setCompareCols])
 }

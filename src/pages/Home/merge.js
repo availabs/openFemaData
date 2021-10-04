@@ -13,16 +13,18 @@ const allowedHaz = ["wind", "wildfire", "tsunami", "tornado", "riverine", "light
 const Fetch = (falcor, attr) => {
     React.useEffect(() => {
         function fetchData() {
-            falcor.get(
-                ['swdOfdMerge', 'indexValues', ['geoid', 'hazard', 'year']],
-                ['swdOfdMerge', 'swd', attr],
-                ['swdOfdMerge', 'swd', 'hazard.year'],
-                ['swdOfdMerge', 'swd', 'geoid.hazard.year'],
-                ['swdOfdMerge', 'ofd_sba_new', attr],
-                ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title'],
-                ['swdOfdMerge', 'ofd_sba_new', 'hazard.year'],
-                ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard.year'],
-            )
+            falcor.get(['severeWeather', 'disasterNumbersList'])
+                .then(response => falcor.get(
+                    ['severeWeather', 'byDisaster', get(response, 'json.severeWeather.disasterNumbersList', ['0']), ['num_events', 'num_episodes', 'total_damage']],
+                    ['swdOfdMerge', 'indexValues', ['geoid', 'hazard', 'year']],
+                    ['swdOfdMerge', 'swd', attr],
+                    ['swdOfdMerge', 'swd', 'hazard.year'],
+                    ['swdOfdMerge', 'swd', 'geoid.hazard.year'],
+                    ['swdOfdMerge', 'ofd_sba_new', attr],
+                    ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title'],
+                    ['swdOfdMerge', 'ofd_sba_new', 'hazard.year'],
+                    ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard.year']
+                ))
         }
 
         return fetchData()
@@ -35,6 +37,7 @@ const Process = (falcorCache, attr) => {
             swd: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'swd', attr, 'value'], []), attr),
             swdByHazByYear: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'swd', 'hazard.year', 'value'], [])),
             swdByGeoByHazByYear: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'swd', 'geoid.hazard.year', 'value'], [])),
+            swdByDn: get(falcorCache, ['severeWeather', 'byDisaster'], []),
 
             ofd: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', attr, 'value'], []), attr),
             ofdByHazByYear: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'hazard.year', 'value'], [])),
@@ -277,17 +280,28 @@ const renderChart = (merged, mergedByHazardByYear, attr,colors= ['#6ee173', '#5f
     )
 }
 
-const renderTable = (data) => {
+const renderTable = (ofdByYearByDn, swdByDn) => {
 
     return (
         <Table
-            data={data}
+            data={ofdByYearByDn}
             columns={
-                ['disaster_title', 'disaster_number', 'year', 'ihp_verified_loss', 'project_amount', 'sba_loss', 'total_loss']
+                [
+                    ...['disaster_title', 'disaster_number', 'year']
                     .map(c => ({
                         Header: c,
                         accessor: c
+                    })),
+                    ...['ihp_verified_loss', 'project_amount', 'sba_loss', 'total_loss', 'swd_loss']
+                    .map(c => ({
+                        Header: c,
+                        accessor: c,
+                        sortMethod: (a, b) => Number(a)-Number(b),
+                        Cell: d =>
+                            fnum( d.cell.value, true)
+                            // d.cell.value.toLocaleString()
                     }))
+                ]
             }
         />
 
@@ -317,6 +331,13 @@ const Merge = (props) => {
     function classNames(...classes) {
         return classes.filter(Boolean).join(' ')
     }
+
+    let ofdSwdByDn =
+        data.ofdByYearByDn
+            .map(r => {
+                r['swd_loss'] = get(data.swdByDn, [r.disaster_number, 'total_damage'], 0)
+                return r
+            })
     return (
         <AdminLayout>
             <div className="w-full max-w-7xl mx-auto">
@@ -336,7 +357,7 @@ const Merge = (props) => {
 
                 <div className={view === 'ChartByDis' ? 'block' : 'hidden'}>
                     {renderChart(dataByYearByDm, {}, attr, null, disaster_numbers)}
-                    {renderTable(data.ofdByYearByDn)}
+                    {renderTable(ofdSwdByDn)}
                 </div>
             </div>
         </AdminLayout>

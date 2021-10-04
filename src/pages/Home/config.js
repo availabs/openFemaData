@@ -157,23 +157,24 @@ export const SBAGroups = {
         operation: '/'}
 */
 export const compareGroups = [
-    {
-        type: 'operation',
-        disasterAttr: 'total_amount_ha_approved',
-        summaryAttr: {type: 'operation::summaryAttr', attrs: ['Assistance given', 'personal_property_amount'], operation: '-'},
-        operation: '/'},
+    // {
+    //     type: 'operation',
+    //     disasterAttr: 'total_amount_ha_approved',
+    //     summaryAttr: {type: 'operation::summaryAttr', attrs: ['Assistance given', 'personal_property_amount'], operation: '-'},
+    //     operation: '/'},
+    //
+    // {
+    //     // title: 'Title 1',
+    //     type: 'operation',
+    //     disasterAttr: 'total_amount_ona_approved',
+    //     summaryAttr: 'personal_property_amount',
+    //     operation: '/'},
+    //
+    // {
+    //     type: 'operation',
+    //     disasterAttr: 'total_amount_ihp_approved',
+    //     summaryAttr: {type: 'operation::summaryAttr', attrs: ['rpfvl', 'ppfvl'], operation: '+'},
+    //     sequence: 'summaryAttr::disasterAttr',
+    //     operation: '/'},
 
-    {
-        // title: 'Title 1',
-        type: 'operation',
-        disasterAttr: 'total_amount_ona_approved',
-        summaryAttr: 'personal_property_amount',
-        operation: '/'},
-
-    {
-        type: 'operation',
-        disasterAttr: 'total_amount_ihp_approved',
-        summaryAttr: {type: 'operation::summaryAttr', attrs: ['rpfvl', 'ppfvl'], operation: '+'},
-        sequence: 'summaryAttr::disasterAttr',
-        operation: '/'},
 ]
