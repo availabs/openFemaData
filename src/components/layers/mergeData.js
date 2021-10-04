@@ -9,7 +9,7 @@ import {ckmeans} from 'simple-statistics'
 const mapping = {
     'Severe Weather': 'swd',
     'Open Fema': 'ofd',
-    'Open Fema + SBA': 'ofd_sba',
+    'Open Fema + SBA': 'ofd_sba_new',
     'Difference (swd - ofd)': 'Difference',
     'Difference (swd - ofd + sba)': 'Difference with SBA'
 }
@@ -155,10 +155,10 @@ class mergeData extends LayerContainer {
             ['swdOfdMerge', 'swd', 'geoid.hazard'],
             ['swdOfdMerge', 'swd', 'geoid.year'],
             ['swdOfdMerge', 'swd', 'geoid.hazard.year'],
-            ['swdOfdMerge', 'ofd_sba', 'geoid'],
-            ['swdOfdMerge', 'ofd_sba', 'geoid.hazard'],
-            ['swdOfdMerge', 'ofd_sba', 'geoid.year'],
-            ['swdOfdMerge', 'ofd_sba', 'geoid.hazard.year'],
+            ['swdOfdMerge', 'ofd_sba_new', 'geoid'],
+            ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard'],
+            ['swdOfdMerge', 'ofd_sba_new', 'geoid.year'],
+            ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard.year'],
             
             ['swdOfdMerge', 'ofd', 'geoid'],
             ['swdOfdMerge', 'ofd', 'geoid.hazard'],
@@ -189,7 +189,7 @@ class mergeData extends LayerContainer {
     paintMap(map, data) {
         const colorScale = this.getColorScale(data.map(d => +(d.total_damage || d.total_loss)));
         let colors = {};
-        console.log(colorScale, data)
+
         data.forEach(d => {
             colors[d.geoid] = colorScale(+(d.total_damage || d.total_loss));
         });
@@ -208,7 +208,7 @@ class mergeData extends LayerContainer {
         let tmpData = []
         if (mapping[this.filters.dataset.value].includes('Difference')){
             let swd = this.data['swd'][grouping],
-                ofd = this.data[mapping[this.filters.dataset.value].includes('SBA') ? 'ofd_sba' : 'ofd'][grouping];
+                ofd = this.data[mapping[this.filters.dataset.value].includes('SBA') ? 'ofd_sba_new' : 'ofd'][grouping];
 
             const filterAttrs = (data, geoid) =>
                 data.geoid === geoid &&
