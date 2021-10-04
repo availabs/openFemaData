@@ -19,7 +19,7 @@ const Fetch = (falcor, attr) => {
                 ['swdOfdMerge', 'swd', 'hazard.year'],
                 ['swdOfdMerge', 'swd', 'geoid.hazard.year'],
                 ['swdOfdMerge', 'ofd_sba_new', attr],
-                ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number'],
+                ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title'],
                 ['swdOfdMerge', 'ofd_sba_new', 'hazard.year'],
                 ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard.year'],
             )
@@ -38,7 +38,7 @@ const Process = (falcorCache, attr) => {
 
             ofd: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', attr, 'value'], []), attr),
             ofdByHazByYear: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'hazard.year', 'value'], [])),
-            ofdByYearByDn: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number', 'value'], [])),
+            ofdByYearByDn: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title', 'value'], [])),
             ofdByGeoByHazByYear: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard.year', 'value'], [])),
 
             indexValues: {
@@ -264,7 +264,7 @@ const renderChart = (merged, mergedByHazardByYear, attr,colors= ['#6ee173', '#5f
                                             axisLeft={{format: fnum}}
                                             indexFormat={fnum}
                                             valueFormat={fnum}
-                                            groupMode={'grouped'}
+                                            // groupMode={'grouped'}
                                             colors={['#6ee173', '#5f78c9']}
                                         /> : null}
                                     </div>
@@ -293,8 +293,9 @@ const renderTable = (data) => {
 
     )
 }
+
 const Merge = (props) => {
-    const [view, setView] = React.useState('ChartByDis');
+    const [view, setView] = React.useState('Map');
     const {falcor, falcorCache} = useFalcor();
     const attr = 'year'
 
@@ -326,7 +327,7 @@ const Merge = (props) => {
                 {renderTabs(tabs, setView, classNames)}
 
                 <div className={view === 'Chart' ? 'block' : 'hidden'}>
-                    {renderChart(merged, mergedByHazardByYear, attr)}
+                    {renderChart(merged, mergedByHazardByYear, attr,  ['#6ee173', '#5f78c9'], ['swd_loss', 'ofd_loss'])}
                 </div>
 
                 <div className={view === 'Map' ? 'block' : 'hidden'}>
