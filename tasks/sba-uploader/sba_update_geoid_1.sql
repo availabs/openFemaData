@@ -13,7 +13,7 @@ with geo as (
                        on(
                                  lower(REPLACE(geo.county_name, ' ', ''))
                                  like
-                                 replace(
+                                 '%' || replace(
                                          replace(
                                                  replace(
                                                          replace(
@@ -26,14 +26,18 @@ with geo as (
                                          ' ', '') || '%'
                              )
                            and geo.stusps = sba.damaged_property_state_code
+         where sba.geoid is null
          order by entry_id, geo.state_name, geo.county_name
      )
 
--- update public.sba_disaster_loan_data_new dst
--- set geoid = newGeo.geo_geoid
--- from newGeo
--- where dst.entry_id = newGeo.entry_id
 
-select sum(total_verified_loss)
-from public.sba_disaster_loan_data_new
-where geoid is null
+
+update public.sba_disaster_loan_data_new dst
+set geoid = newGeo.geo_geoid
+from newGeo
+where dst.entry_id = newGeo.entry_id
+  and dst.geoid is null
+
+-- there are still null geoids. for them:
+-- use state centroid county/ first county (001)
+-- use disaster number to get geoid?

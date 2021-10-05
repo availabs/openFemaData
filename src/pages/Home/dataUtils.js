@@ -81,7 +81,7 @@ const fetchDecData = (falcor, falcorCache, loadingIHPSummaryData) => {
 export const LoadFEMADisasterDeclarations = (falcor, falcorCache, loadingIHPSummaryData) => {
     return React.useEffect(() => {
         return fetchDecData(falcor, falcorCache, loadingIHPSummaryData);
-    }, [falcorCache.fema, loadingIHPSummaryData]);
+    }, [falcor, falcorCache, falcorCache.fema, loadingIHPSummaryData]);
 }
 
 export const LoadSWD = (falcor, falcorCache, loadingIHPSummaryData, setLoadingIHPSummaryData, severeWeatherDataByDisaster, setSevereWeatherDataByDisaster) => {
@@ -94,10 +94,10 @@ export const LoadSWD = (falcor, falcorCache, loadingIHPSummaryData, setLoadingIH
 
             let SWD = {}
 
-            return _.chunk(disasterNumbers, 50).reduce((acc, disasterNumbers, cI) => {
+            return _.chunk(disasterNumbers, 500).reduce((acc, disasterNumbers, cI) => {
                 return acc.then(() => {
                     return falcor.get(
-                        ['severeWeather', 'byDisaster', disasterNumbers, SEVERE_WEATHER_ATTRIBUTES]
+                        ['severeWeather', 'byDisaster', disasterNumbers, ['num_events', 'num_episodes', 'total_damage']]
                     ).then(swd => {
                         disasterNumbers.forEach(dns => {
                             if(
@@ -109,8 +109,11 @@ export const LoadSWD = (falcor, falcorCache, loadingIHPSummaryData, setLoadingIH
                                     acc[attr] = +get(swd, ['json', 'severeWeather', 'byDisaster', dns, attr], 0)
                                     return acc;
                                 }, {})
+
                             }
                         });
+                        setSevereWeatherDataByDisaster(SWD);
+
                         return swd
                     })
                 })
@@ -122,7 +125,7 @@ export const LoadSWD = (falcor, falcorCache, loadingIHPSummaryData, setLoadingIH
         }
 
         return fetchData();
-    }, [falcorCache.fema_disasters])
+    }, [falcor, falcorCache, falcorCache.fema_disasters, setSevereWeatherDataByDisaster])
 }
 
 export const ProcessData = (falcor, falcorCache) => {
