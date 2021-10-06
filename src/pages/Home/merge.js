@@ -13,9 +13,9 @@ const allowedHaz = ["wind", "wildfire", "tsunami", "tornado", "riverine", "light
 const Fetch = (falcor, attr) => {
     React.useEffect(() => {
         function fetchData() {
-            falcor.get(['severeWeather', 'disasterNumbersList'])
+            falcor.get(['severeWeather', 'disasterNumbersList'], ['severeWeather', 'withoutDisasterNumber'])
                 .then(response => falcor.get(
-                    ['severeWeather', 'byDisaster', get(response, 'json.severeWeather.disasterNumbersList', ['0']), ['num_events', 'num_episodes', 'total_damage']],
+                    ['severeWeather', 'byDisaster', get(response, 'json.severeWeather.disasterNumbersList', ['0']), ['year', 'num_events', 'num_episodes', 'total_damage']],
                     ['swdOfdMerge', 'indexValues', ['geoid', 'hazard', 'year']],
                     ['swdOfdMerge', 'swd', attr],
                     ['swdOfdMerge', 'swd', 'hazard.year'],
@@ -38,6 +38,7 @@ const Process = (falcorCache, attr) => {
             swdByHazByYear: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'swd', 'hazard.year', 'value'], [])),
             swdByGeoByHazByYear: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'swd', 'geoid.hazard.year', 'value'], [])),
             swdByDn: get(falcorCache, ['severeWeather', 'byDisaster'], []),
+            swdWithoutDn: get(falcorCache, ['severeWeather', 'withoutDisasterNumber', 'value'], []),
 
             ofd: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', attr, 'value'], []), attr),
             ofdByHazByYear: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'hazard.year', 'value'], [])),
@@ -338,9 +339,30 @@ const Merge = (props) => {
                 r['swd_loss'] = get(data.swdByDn, [r.disaster_number, 'total_damage'], 0)
                 return r
             })
+
+    let swdByYear = React.useMemo(() => {
+        return data.indexValues.year.map(year => {
+            let noDN = data.swdWithoutDn.filter(d => d.year === year)
+            let withDN = Object.keys(data.swdByDn).filter(d => data.swdByDn[d].year === year).reduce((acc, curr) => {
+                acc[curr] = data.swdByDn[curr].total_damage;
+                return acc
+            }, {})
+
+            if(noDN.length > 1){
+                console.error('!! something wrong!')
+            }
+
+            return {
+                ...withDN,
+                'No DN': +(noDN[0] || {}).total_damage,
+                year,
+            }
+        })
+    }, [data.indexValues.year, data.swdWithoutDn, data.swdByDn])
+
     return (
         <AdminLayout>
-            <div className="w-full max-w-7xl mx-auto">
+            <div className="w-full max-w-7xl mx-auto pb-5">
                 <div className='pt-4 pb-3 px-6'>
                     <h3 className='inline font-bold text-3xl'>Merge</h3>
                 </div>
@@ -357,6 +379,13 @@ const Merge = (props) => {
 
                 <div className={view === 'ChartByDis' ? 'block' : 'hidden'}>
                     {renderChart(dataByYearByDm, {}, attr, null, disaster_numbers)}
+
+                    {/*storm events data on the below chart will be lesser than the original chart on the first tab 'Chart'. */}
+                    {/*This happens because there are disaster numbers which exist in open_fema_data.disaster_declarations_summaries_v2, */}
+                    {/*but are not present in open_fema_data.public_assistance_funded_projects_details_v1 or */}
+                    {/*open_fema_data.individuals_and_households_program_valid_registrations_v1.*/}
+
+                    {renderChart(swdByYear, {}, attr, null, [...disaster_numbers, 'No DN'])}
                     {renderTable(ofdSwdByDn)}
                 </div>
             </div>
