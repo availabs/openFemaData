@@ -156,6 +156,7 @@ class mergeData extends LayerContainer {
             ['swdOfdMerge', 'swd', 'geoid.year'],
             ['swdOfdMerge', 'swd', 'geoid.hazard.year'],
             ['swdOfdMerge', 'ofd_sba_new', 'geoid'],
+            ['swdOfdMerge', 'ofd_sba_new', 'disaster_number'],
             ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard'],
             ['swdOfdMerge', 'ofd_sba_new', 'geoid.year'],
             ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard.year'],
@@ -198,7 +199,7 @@ class mergeData extends LayerContainer {
     }
 
     render(map, falcor) {
-        
+        console.log(this.data)
         let grouping =
             this.filters.hazard.value === 'All Hazards' && this.filters.year.value === 'All Time' ? 'geoid' :
             this.filters.hazard.value === 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.year' :
