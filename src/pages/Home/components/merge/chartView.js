@@ -41,7 +41,7 @@ const Process = (falcorCache, attr) => {
 
             indexValues: {
                 hazard: get(falcorCache, ['swdOfdMerge', 'indexValues', 'hazard', 'value'], []),
-                year: get(falcorCache, ['swdOfdMerge', 'indexValues', 'year', 'value'], []),
+                year: get(falcorCache, ['swdOfdMerge', 'indexValues', 'year', 'value'], []).filter(year => year >= 2000),
                 geoid: get(falcorCache, ['swdOfdMerge', 'indexValues', 'geoid', 'value'], [])
             }
         }
