@@ -10,7 +10,7 @@ export const MergeSummaryTable = (data, totals) => {
     const cols = _.keys(data[0])
         .filter(c => !['group_by'].includes(c))
         .map(c => ({
-            Header: c.replace(/_/g, ' ').replace(/num/g, '#'),
+            Header: c.replace(/_/g, ' '),
             accessor: c,
             align: 'center',
             disableFilters: true,
@@ -27,7 +27,7 @@ export const MergeSummaryTable = (data, totals) => {
                         .filter(c => !['group_by'].includes(c))
                         .map(attr => (
                             <div className={`px-6 py-5 text-sm font-medium text-center`}>
-                                <div className={`text-gray-600 capitalize`}>{attr.replace(/_/g, ' ').replace(/num/g, 'total #')}</div>
+                                <div className={`text-gray-600 capitalize`}>{attr.replace(/_/g, ' ')}</div>
                                 <div className={`text-lg`}>{
                                     !['geoid', 'disaster_number'].includes(attr) ?
                                         fnum(summary[attr]) :
