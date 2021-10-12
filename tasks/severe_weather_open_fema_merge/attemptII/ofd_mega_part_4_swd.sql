@@ -8,7 +8,7 @@ with swd as (SELECT
              group by 1, 2
              order by 1, 2)
 
-update severe_weather_open_fema_data_merge.fba_annual_loss_by_county_by_hazard_sba_new summary
+update severe_weather_open_fema_data_merge.disaster_summaries summary
 set swd_loss = swd.swd_loss
 from swd
 where summary.disaster_number = swd.disaster_number

@@ -16,6 +16,7 @@ import {IHPSummary} from './components/IHPSummary'
 import {PASummary} from './components/PASummary'
 import {SBA} from './components/SBA'
 import {SevereWeatherDataTable} from "./components/SevereWeatherDataTable";
+import {MergeSummaryTable} from "./components/MergeSummaryTable";
 import {Declarations} from './components/Declarations'
 import {Map} from './components/Map'
 import _ from "lodash";
@@ -54,6 +55,8 @@ const Home = ({ falcor, falcorCache, ...props }) => {
         	['fema_disasters','byId', disasterNumber , 'pa_summary'],
         	['fema_disasters','byId', disasterNumber , 'byZip', 'ihp_summary'],
 			['fema_disasters', disasterNumber, 'declarations', 'length'],
+			['swdOfdMerge', 'summary', 'geoid.disaster_number', disasterNumber],
+			['swdOfdMerge', 'summary', 'disaster_number', disasterNumber],
 			['sba', 'events', 'byDisasterNumber', disasterNumber, 'byLoanType', ['business', 'home'], ['total_loss']]
         ).then(dec => {
 			let declarationLength = get(dec, ['json','fema_disasters', disasterNumber, 'declarations', 'length'], {});
@@ -75,6 +78,8 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 
     		...get(falcorCache, ['fema_disasters', 'byId', disasterNumber, 'ihp_summary'], {}),
     		paSummary: get(falcorCache, ['fema_disasters', 'byId', disasterNumber, 'pa_summary'], {}),
+    		mergeSummary: get(falcorCache, ['swdOfdMerge', 'summary', 'geoid.disaster_number', disasterNumber, 'value'], []),
+    		mergeSummaryTotal: get(falcorCache, ['swdOfdMerge', 'summary', 'disaster_number', disasterNumber, 'value'], []),
 			sba: get(falcorCache, ['sba', 'events', 'byDisasterNumber', disasterNumber, 'byLoanType']),
 			counties: [],
 			earliestEventStart: null,
@@ -132,6 +137,7 @@ const Home = ({ falcor, falcorCache, ...props }) => {
 				{SBA(disaster)}
 				{Map(disasterNumber, severeWeatherDataTotals.num_episodes ? severeWeatherData : [], mapFocus)}
 				{SevereWeatherDataTable(severeWeatherDataTotals, severeWeatherDataTotals.num_episodes ? severeWeatherData : [], mapFocus, setMapFocus)}
+				{MergeSummaryTable(disaster.mergeSummary, disaster.mergeSummaryTotal[0] || {})}
 				{Declarations(disaster)}
         	</div>
 		</AdminLayout>
