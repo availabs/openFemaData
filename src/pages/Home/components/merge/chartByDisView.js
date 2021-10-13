@@ -32,10 +32,10 @@ const Process = (falcorCache) => {
             swdByDn: get(falcorCache, ['severeWeather', 'byDisaster'], []),
             swdWithoutDn: get(falcorCache, ['severeWeather', 'withoutDisasterNumber', 'value'], []),
 
-            ofdByYearByDn: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title', 'value'], [])),
+            ofdByYearByDn: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title', 'value'], [])).filter(data => data.year >= 2000),
 
             indexValues: {
-                year: get(falcorCache, ['swdOfdMerge', 'indexValues', 'year', 'value'], []),
+                year: get(falcorCache, ['swdOfdMerge', 'indexValues', 'year', 'value'], []).filter(year => year >= 2000),
             }
         }
     }, [falcorCache])
