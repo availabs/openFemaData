@@ -23,10 +23,10 @@ class mergeData extends LayerContainer {
             type: "dropdown",
             multi: false,
             value: 'Open Fema + SBA',
-            domain: ['Severe Weather', 'Open Fema + SBA', 'Difference (swd - ofd + sba)'],
+            domain: ['Severe Weather with DN', 'Open Fema + SBA', 'Difference (swd - ofd + sba)'],
         },
         disaster_number: {
-            name: "Disaster Number with DN",
+            name: "Disaster Number",
             type: "dropdown",
             multi: false,
             value: '1603',
