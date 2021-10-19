@@ -7,38 +7,29 @@ import {fnum} from "../../utils/fnum";
 import {ckmeans} from 'simple-statistics'
 
 const mapping = {
-    'Severe Weather': 'swd',
-    'Open Fema': 'ofd',
-    'Open Fema + SBA': 'ofd_sba_new',
-    'Difference (swd - ofd)': 'Difference',
+    'Severe Weather with DN': 'swd_loss',
+    'Open Fema + SBA': 'ofd_total',
     'Difference (swd - ofd + sba)': 'Difference with SBA'
 }
 class mergeData extends LayerContainer {
 
-    setActive = !!this.viewId
-    name = 'Merge Data'
-    id = 'Merge Data'
+    // setActive = !!this.viewId
+    name = 'Merge Data by Disaster Number'
+    id = 'Merge Data by Disaster Number'
     data = []
     filters = {
         dataset: {
             name: "Dataset",
             type: "dropdown",
             multi: false,
-            value: ['Open Fema + SBA'],
-            domain: ['Severe Weather', 'Open Fema', 'Open Fema + SBA', 'Difference (swd - ofd)', 'Difference (swd - ofd + sba)'],
+            value: 'Open Fema + SBA',
+            domain: ['Severe Weather with DN', 'Open Fema + SBA', 'Difference (swd - ofd + sba)'],
         },
-        year: {
-            name: "Year",
+        disaster_number: {
+            name: "Disaster Number",
             type: "dropdown",
             multi: false,
-            value: 'All Time',
-            domain: [],
-        },
-        hazard: {
-            name: "Hazard",
-            type: "dropdown",
-            multi: false,
-            value: 'All Hazards',
+            value: '1603',
             domain: [],
         },
     }
@@ -46,7 +37,7 @@ class mergeData extends LayerContainer {
     legend = {
         Title: ({layer}) => get(layer.filters.attribute, 'value', '').replace(/_/g, ' '),
         type: "quantile",
-        domain: [],
+        domain: ['60000000', '150000000', '500000000', '1000000000', '5000000000', '10000000000', '20000000000'],
         format: fnum,
         range: getColorRange(7, "YlOrRd", true),
         show: true,
@@ -140,10 +131,6 @@ class mergeData extends LayerContainer {
         map.fitBounds([-125.0011, 24.9493, -66.9326, 49.5904])
     }
 
-    onFilterChange(filterName, newValue, prevValue) {
-        // this.legend.format = newValue === 'num_valid_registrations' ? d => fnum(d, false) : fnum;
-    }
-
     receiveProps(props, map, falcor, MapActions) {
         this.fetchData(falcor).then(() => this.render(map, falcor))
     }
@@ -151,25 +138,26 @@ class mergeData extends LayerContainer {
     fetchData(falcor) {
         return falcor.get(
             ['swdOfdMerge', 'indexValues', ['geoid', 'hazard', 'year']],
-            ['swdOfdMerge', 'swd', 'geoid'],
-            ['swdOfdMerge', 'swd', 'geoid.hazard'],
-            ['swdOfdMerge', 'swd', 'geoid.year'],
-            ['swdOfdMerge', 'swd', 'geoid.hazard.year'],
-            ['swdOfdMerge', 'ofd_sba_new', 'geoid'],
-            ['swdOfdMerge', 'ofd_sba_new', 'disaster_number'],
-            ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard'],
-            ['swdOfdMerge', 'ofd_sba_new', 'geoid.year'],
-            ['swdOfdMerge', 'ofd_sba_new', 'geoid.hazard.year'],
-
-            ['swdOfdMerge', 'ofd', 'geoid'],
-            ['swdOfdMerge', 'ofd', 'geoid.hazard'],
-            ['swdOfdMerge', 'ofd', 'geoid.year'],
-            ['swdOfdMerge', 'ofd', 'geoid.hazard.year'],
+            ['severeWeather', 'disasterNumbersList'],
+            ['swdOfdMerge', 'summary', 'disaster_numbers']
         ).then(d => {
-            this.data = get(d, 'json.swdOfdMerge', {})
-            this.filters.year.domain = ['All Time', ...get(d, 'json.swdOfdMerge.indexValues.year', [])]
-            this.filters.hazard.domain = ['All Hazards', ...get(d, 'json.swdOfdMerge.indexValues.hazard', [])]
+            let disasterNumbers = [...new Set(
+                [
+                    ...get(d, `json.severeWeather.disasterNumbersList`, []),
+                    ...get(d, `json.swdOfdMerge.summary.disaster_numbers`, []),
+                ]
+            )]
+
+            this.filters.disaster_number.domain = disasterNumbers
+            if(disasterNumbers.length){
+                return falcor.get(
+                    ['swdOfdMerge', 'summary', 'geoid.disaster_number.disaster_title', disasterNumbers]
+                )
+            }
         }).then(() => {
+            let data = falcor.getCache()
+            this.data = get(data, 'swdOfdMerge.summary', {})
+            console.log('fc', this,data)
             return _.chunk(get(this.data, 'indexValues.geoid', ['36']).filter(f => f !== 'None'), 100)
                 .reduce((acc, curr) => falcor.get(['geo', curr, 'name']), Promise.resolve())
         }).then(names => {
@@ -180,7 +168,7 @@ class mergeData extends LayerContainer {
     getColorScale(domain) {
         if (this.legend.range.length > domain.length) return this.legend.domain = []
 
-        this.legend.domain = ckmeans(domain, this.legend.range.length).map(d => Math.min(...d))
+        // this.legend.domain = ckmeans(domain, this.legend.range.length).map(d => Math.min(...d))
 
         return scaleLinear()
             .domain(this.legend.domain)
@@ -188,11 +176,12 @@ class mergeData extends LayerContainer {
     }
 
     paintMap(map, data) {
-        const colorScale = this.getColorScale(data.map(d => +(d.total_damage || d.total_loss)));
+        const attr = mapping[this.filters.dataset.value]
+        const colorScale = this.getColorScale(data.map(d => +(d[attr])));
         let colors = {};
 
         data.forEach(d => {
-            colors[d.geoid] = colorScale(+(d.total_damage || d.total_loss));
+            colors[d.geoid] = colorScale(+(d[attr]));
         });
         map.setPaintProperty('counties', 'fill-color',
             ['get', ['get', 'geoid'], ['literal', colors]]);
@@ -200,51 +189,46 @@ class mergeData extends LayerContainer {
 
     render(map, falcor) {
 
-        let grouping =
-            this.filters.hazard.value === 'All Hazards' && this.filters.year.value === 'All Time' ? 'geoid' :
-            this.filters.hazard.value === 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.year' :
-            this.filters.hazard.value !== 'All Hazards' && this.filters.year.value === 'All Time' ? 'geoid.hazard' :
-            this.filters.hazard.value !== 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.hazard.year' : 'geoid'
+        let grouping = 'geoid.disaster_number.disaster_title'
 
         let tmpData = []
         if (mapping[this.filters.dataset.value].includes('Difference')){
-            let swd = this.data['swd'][grouping] || [],
-                ofd = this.data[mapping[this.filters.dataset.value].includes('SBA') ? 'ofd_sba_new' : 'ofd'][grouping] || [];
-
-            const filterAttrs = (data, geoid) =>
-                data.geoid === geoid &&
-                (
-                    grouping.split('.')
-                        .filter(g => g !== 'geoid')
-                        .reduce((acc, curr) => acc && data[curr] === this.filters[curr].value, true)
-                )
-
-            get(this.data, 'indexValues.geoid', [])
-                .forEach(geoid => {
-                    let swdLoss = parseFloat(get(swd.filter(s => filterAttrs(s, geoid)), [0, 'total_damage'], 0)),
-                        ofdLoss = parseFloat(get(ofd.filter(o => filterAttrs(o, geoid)), [0, 'total_loss'], 0))
-
-                    tmpData.push(
-                        {
-                            geoid,
-                            swdLoss,
-                            ofdLoss,
-                            total_loss: swdLoss - ofdLoss
-                        }
-                    )
-                })
-
-            this.data = tmpData
+            // let swd = this.data['swd'][grouping] || [],
+            //     ofd = this.data[mapping[this.filters.dataset.value].includes('SBA') ? 'ofd_sba_new' : 'ofd'][grouping] || [];
+            //
+            // const filterAttrs = (data, geoid) =>
+            //     data.geoid === geoid &&
+            //     (
+            //         grouping.split('.')
+            //             .filter(g => g !== 'geoid')
+            //             .reduce((acc, curr) => acc && data[curr] === this.filters[curr].value.split(' - ')[0], true)
+            //     )
+            //
+            // get(this.data, 'indexValues.geoid', [])
+            //     .forEach(geoid => {
+            //         let swdLoss = parseFloat(get(swd.filter(s => filterAttrs(s, geoid)), [0, 'total_damage'], 0)),
+            //             ofdLoss = parseFloat(get(ofd.filter(o => filterAttrs(o, geoid)), [0, 'total_loss'], 0))
+            //
+            //         tmpData.push(
+            //             {
+            //                 geoid,
+            //                 swdLoss,
+            //                 ofdLoss,
+            //                 total_loss: swdLoss - ofdLoss
+            //             }
+            //         )
+            //     })
+            //
+            // this.data = tmpData
 
         }else{
-            tmpData = this.data[mapping[this.filters.dataset.value]][grouping] || [];
-
+            tmpData = this.data[grouping] || [];
             this.data =
-                grouping.split('.')
-                    .filter(g => g !== 'geoid')
-                    .reduce((acc, curr) =>
-                            acc.filter(a => a[curr] === this.filters[curr].value)
-                        , tmpData)
+                Object.keys(tmpData)
+                    .filter(d => tmpData[d] && (!this.filters.disaster_number.value || this.filters.disaster_number.value === d.toString()))
+                    .reduce((acc, c) => [...acc, ...tmpData[c].value], [])
+                    .filter(d => +d[mapping[this.filters.dataset.value]])
+            console.log('filtered data by geo', this.data.filter(d => d.geoid === '22105'))
         }
 
 
@@ -252,4 +236,4 @@ class mergeData extends LayerContainer {
     }
 }
 
-export const MergeDataFactory = (options = {}) => new mergeData(options)
+export const MergeDataByDNFactory = (options = {}) => new mergeData(options)
