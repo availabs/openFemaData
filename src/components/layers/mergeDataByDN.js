@@ -4,11 +4,12 @@ import get from "lodash.get"
 import {LayerContainer} from "@availabs/avl-map"
 import {getColorRange, useTheme} from "@availabs/avl-components";
 import {fnum} from "../../utils/fnum";
-import {ckmeans} from 'simple-statistics'
 
 const mapping = {
-    'Severe Weather with DN': 'swd_loss',
-    'Open Fema + SBA': 'ofd_total',
+    'Severe Weather with DN': 'total_damage',
+    'Severe Weather without DN': 'total_damage',
+    'Merge: Open Fema': 'ofd_total',
+    'Merge: SWD': 'swd_loss',
     'Difference (swd - ofd + sba)': 'Difference with SBA'
 }
 class mergeData extends LayerContainer {
@@ -22,14 +23,14 @@ class mergeData extends LayerContainer {
             name: "Dataset",
             type: "dropdown",
             multi: false,
-            value: 'Open Fema + SBA',
-            domain: ['Severe Weather with DN', 'Open Fema + SBA', 'Difference (swd - ofd + sba)'],
+            value: 'Severe Weather without DN',
+            domain: ['Severe Weather with DN', 'Severe Weather without DN', 'Merge: Open Fema', 'Merge: SWD'],
         },
         disaster_number: {
             name: "Disaster Number",
             type: "dropdown",
             multi: false,
-            value: '1603',
+            value: '',
             domain: [],
         },
     }
@@ -139,7 +140,8 @@ class mergeData extends LayerContainer {
         return falcor.get(
             ['swdOfdMerge', 'indexValues', ['geoid', 'hazard', 'year']],
             ['severeWeather', 'disasterNumbersList'],
-            ['swdOfdMerge', 'summary', 'disaster_numbers']
+            ['swdOfMerge', 'swd', 'withoutDisasterNumber', 'geoid'],
+            ['swdOfdMerge', 'summary', 'disaster_numbers'],
         ).then(d => {
             let disasterNumbers = [...new Set(
                 [
@@ -151,14 +153,21 @@ class mergeData extends LayerContainer {
             this.filters.disaster_number.domain = disasterNumbers
             if(disasterNumbers.length){
                 return falcor.get(
-                    ['swdOfdMerge', 'summary', 'geoid.disaster_number.disaster_title', disasterNumbers]
+                    ['swdOfdMerge', 'summary', 'geoid.disaster_number.disaster_title', disasterNumbers],
+                    ['severeWeather', 'byDisaster', disasterNumbers, ['year', 'hazard', 'geoid', 'total_damage']],
                 )
             }
         }).then(() => {
             let data = falcor.getCache()
-            this.data = get(data, 'swdOfdMerge.summary', {})
-            console.log('fc', this,data)
-            return _.chunk(get(this.data, 'indexValues.geoid', ['36']).filter(f => f !== 'None'), 100)
+
+            this.data = {
+                indexValues: get(data, 'swdOfdMerge.indexValues', {}),
+                merge: get(data, 'swdOfdMerge.summary', {}),
+                swd: get(data, 'severeWeather.byDisaster', {}),
+                swdWithoutDN: get(data, ['swdOfMerge', 'swd', 'withoutDisasterNumber', 'geoid', 'value'], {})
+            }
+            console.log('fc', this.data)
+            return _.chunk(get(this.data, 'indexValues.geoid.value', ['36']).filter(f => f !== 'None'), 100)
                 .reduce((acc, curr) => falcor.get(['geo', curr, 'name']), Promise.resolve())
         }).then(names => {
             this.geoNames = get(falcor.getCache(), ['geo'], {})
@@ -166,7 +175,10 @@ class mergeData extends LayerContainer {
     }
 
     getColorScale(domain) {
-        if (this.legend.range.length > domain.length) return this.legend.domain = []
+        if (this.legend.range.length > domain.length) {
+            this.legend.domain = []
+            return () => '#ccc'
+        }
 
         // this.legend.domain = ckmeans(domain, this.legend.range.length).map(d => Math.min(...d))
 
@@ -177,11 +189,13 @@ class mergeData extends LayerContainer {
 
     paintMap(map, data) {
         const attr = mapping[this.filters.dataset.value]
+
         const colorScale = this.getColorScale(data.map(d => +(d[attr])));
+
         let colors = {};
 
         data.forEach(d => {
-            colors[d.geoid] = colorScale(+(d[attr]));
+            colors[d.geoid.toString()] = colorScale(+(d[attr]));
         });
         map.setPaintProperty('counties', 'fill-color',
             ['get', ['get', 'geoid'], ['literal', colors]]);
@@ -191,7 +205,8 @@ class mergeData extends LayerContainer {
 
         let grouping = 'geoid.disaster_number.disaster_title'
 
-        let tmpData = []
+        let tmpData = [], data;
+
         if (mapping[this.filters.dataset.value].includes('Difference')){
             // let swd = this.data['swd'][grouping] || [],
             //     ofd = this.data[mapping[this.filters.dataset.value].includes('SBA') ? 'ofd_sba_new' : 'ofd'][grouping] || [];
@@ -222,13 +237,24 @@ class mergeData extends LayerContainer {
             // this.data = tmpData
 
         }else{
-            tmpData = this.data[grouping] || [];
+            tmpData =
+                this.filters.dataset.value === 'Severe Weather with DN' ? this.data.swd :
+                this.filters.dataset.value === 'Severe Weather without DN' ? this.data.swdWithoutDN :
+                this.data['merge'][grouping] || [];
+
             this.data =
-                Object.keys(tmpData)
-                    .filter(d => tmpData[d] && (!this.filters.disaster_number.value || this.filters.disaster_number.value === d.toString()))
-                    .reduce((acc, c) => [...acc, ...tmpData[c].value], [])
-                    .filter(d => +d[mapping[this.filters.dataset.value]])
-            console.log('filtered data by geo', this.data.filter(d => d.geoid === '22105'))
+                this.filters.dataset.value === 'Severe Weather with DN' ?
+                    Object.keys(tmpData)
+                        .filter(d => tmpData[d] && (!this.filters.disaster_number.value || this.filters.disaster_number.value === d.toString()))
+                        .map(d => ({disaster_number: d, ...tmpData[d]})) :
+                    this.filters.dataset.value === 'Severe Weather without DN' ?
+                        tmpData :
+                    Object.keys(tmpData)
+                        .filter(d => tmpData[d] && (!this.filters.disaster_number.value || this.filters.disaster_number.value === d.toString()))
+                        .reduce((acc, c) => [...acc, ...tmpData[c].value], [])
+                        .filter(d => +d[mapping[this.filters.dataset.value]])
+
+            console.log('filtered data by geo', this.data/*.filter(d => d.geoid.toString() === '420')*/)
         }
 
 

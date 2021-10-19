@@ -25,7 +25,7 @@ class mergeData extends LayerContainer {
             type: "dropdown",
             multi: false,
             value: ['Open Fema + SBA'],
-            domain: ['Severe Weather', 'Open Fema', 'Open Fema + SBA', 'Difference (swd - ofd)', 'Difference (swd - ofd + sba)'],
+            domain: [/*'Severe Weather',*/ 'Open Fema', 'Open Fema + SBA', 'Difference (swd - ofd)', 'Difference (swd - ofd + sba)'],
         },
         year: {
             name: "Year",
