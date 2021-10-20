@@ -1,4 +1,4 @@
-update severe_weather_open_fema_data_merge.disaster_summaries ihp
+update severe_weather_open_fema_data_merge.disaster_summaries_merge_without_hazard_type ihp
 set hazard = CASE
                  when ihp.hazard = 'Fire' then 'wildfire'
                  when ihp.hazard = 'Tsunami' then 'tsunami'

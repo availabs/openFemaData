@@ -1,4 +1,4 @@
-update severe_weather_open_fema_data_merge.disaster_summaries ofd
+update severe_weather_open_fema_data_merge.disaster_summaries_merge_without_hazard_type ofd
 set disaster_title = disaster_name
 from open_fema_data.fema_web_disaster_declarations_v1 dd
 where ofd.disaster_number = dd.disaster_number::text

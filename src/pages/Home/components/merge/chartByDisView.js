@@ -14,7 +14,7 @@ const Fetch = (falcor, attr) => {
     React.useEffect(() => {
         function fetchData() {
             falcor.get(
-                ['severeWeather', 'disasterNumbersList'], ['severeWeather', 'withoutDisasterNumber', 'year'])
+                ['severeWeather', 'disasterNumbersList'], ['swdOfMerge', 'swd', 'withoutDisasterNumber', 'year'])
                 .then(response => falcor.get(
                     ['severeWeather', 'byDisaster', get(response, 'json.severeWeather.disasterNumbersList', ['0']), ['year', 'num_events', 'num_episodes', 'total_damage']],
                     ['swdOfdMerge', 'indexValues', ['year']],
@@ -30,7 +30,7 @@ const Process = (falcorCache) => {
     return React.useMemo(() => {
         return {
             swdByDn: get(falcorCache, ['severeWeather', 'byDisaster'], []),
-            swdWithoutDn: get(falcorCache, ['severeWeather', 'withoutDisasterNumber', 'year', 'value'], []),
+            swdWithoutDn: get(falcorCache, ['swdOfMerge', 'swd', 'withoutDisasterNumber', 'year', 'value'], []),
 
             ofdByYearByDn: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title', 'value'], [])).filter(data => data.year >= 2000),
 
