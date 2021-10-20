@@ -23,8 +23,8 @@ class mergeData extends LayerContainer {
             name: "Dataset",
             type: "dropdown",
             multi: false,
-            value: 'Severe Weather without DN',
-            domain: ['Severe Weather with DN', 'Severe Weather without DN', 'Merge: Open Fema', 'Merge: SWD'],
+            value: 'Severe Weather with DN',
+            domain: ['Merge: Open Fema', 'Merge: SWD', 'Severe Weather with DN', 'Severe Weather without DN'],
         },
         disaster_number: {
             name: "Disaster Number",
@@ -79,7 +79,7 @@ class mergeData extends LayerContainer {
 
                 return [
                     ...a,
-                    [get(this.geoNames, [feature.properties.geoid, 'name'], feature.properties.geoid)],
+                    [get(this.geoNames, [feature.properties.geoid, 'name'], feature.properties.geoid), feature.properties.geoid],
                     ...Object.keys(data)
                         .filter(d => !['geoid', 'group_by'].includes(d))
                         .reduce((acc, curr) => {
@@ -154,7 +154,7 @@ class mergeData extends LayerContainer {
             if(disasterNumbers.length){
                 return falcor.get(
                     ['swdOfdMerge', 'summary', 'geoid.disaster_number.disaster_title', disasterNumbers],
-                    ['severeWeather', 'byDisaster', disasterNumbers, ['year', 'hazard', 'geoid', 'total_damage']],
+                    ['severeWeather', 'byDisaster', disasterNumbers, ['geoid', 'total_damage']],
                 )
             }
         }).then(() => {
@@ -166,7 +166,7 @@ class mergeData extends LayerContainer {
                 swd: get(data, 'severeWeather.byDisaster', {}),
                 swdWithoutDN: get(data, ['swdOfMerge', 'swd', 'withoutDisasterNumber', 'geoid', 'value'], {})
             }
-            console.log('fc', this.data)
+
             return _.chunk(get(this.data, 'indexValues.geoid.value', ['36']).filter(f => f !== 'None'), 100)
                 .reduce((acc, curr) => falcor.get(['geo', curr, 'name']), Promise.resolve())
         }).then(names => {
@@ -176,8 +176,8 @@ class mergeData extends LayerContainer {
 
     getColorScale(domain) {
         if (this.legend.range.length > domain.length) {
-            this.legend.domain = []
-            return () => '#ccc'
+            // this.legend.domain = []
+            // return () => '#ccc'
         }
 
         // this.legend.domain = ckmeans(domain, this.legend.range.length).map(d => Math.min(...d))
@@ -205,58 +205,44 @@ class mergeData extends LayerContainer {
 
         let grouping = 'geoid.disaster_number.disaster_title'
 
-        let tmpData = [], data;
+        let tmpData = [];
 
-        if (mapping[this.filters.dataset.value].includes('Difference')){
-            // let swd = this.data['swd'][grouping] || [],
-            //     ofd = this.data[mapping[this.filters.dataset.value].includes('SBA') ? 'ofd_sba_new' : 'ofd'][grouping] || [];
-            //
-            // const filterAttrs = (data, geoid) =>
-            //     data.geoid === geoid &&
-            //     (
-            //         grouping.split('.')
-            //             .filter(g => g !== 'geoid')
-            //             .reduce((acc, curr) => acc && data[curr] === this.filters[curr].value.split(' - ')[0], true)
-            //     )
-            //
-            // get(this.data, 'indexValues.geoid', [])
-            //     .forEach(geoid => {
-            //         let swdLoss = parseFloat(get(swd.filter(s => filterAttrs(s, geoid)), [0, 'total_damage'], 0)),
-            //             ofdLoss = parseFloat(get(ofd.filter(o => filterAttrs(o, geoid)), [0, 'total_loss'], 0))
-            //
-            //         tmpData.push(
-            //             {
-            //                 geoid,
-            //                 swdLoss,
-            //                 ofdLoss,
-            //                 total_loss: swdLoss - ofdLoss
-            //             }
-            //         )
-            //     })
-            //
-            // this.data = tmpData
-
-        }else{
-            tmpData =
-                this.filters.dataset.value === 'Severe Weather with DN' ? this.data.swd :
+        tmpData =
+            this.filters.dataset.value === 'Severe Weather with DN' ? this.data.swd :
                 this.filters.dataset.value === 'Severe Weather without DN' ? this.data.swdWithoutDN :
-                this.data['merge'][grouping] || [];
+                    this.data['merge'][grouping] || [];
 
-            this.data =
-                this.filters.dataset.value === 'Severe Weather with DN' ?
-                    Object.keys(tmpData)
-                        .filter(d => tmpData[d] && (!this.filters.disaster_number.value || this.filters.disaster_number.value === d.toString()))
-                        .map(d => ({disaster_number: d, ...tmpData[d]})) :
-                    this.filters.dataset.value === 'Severe Weather without DN' ?
-                        tmpData :
+        this.data =
+            this.filters.dataset.value === 'Severe Weather with DN' ?
+                Object.keys(tmpData)
+                    .filter(d => tmpData[d] && (!this.filters.disaster_number.value || this.filters.disaster_number.value === d.toString()))
+                    .map(d => ({disaster_number: d, ...tmpData[d]})) :
+                this.filters.dataset.value === 'Severe Weather without DN' ?
+                    tmpData :
                     Object.keys(tmpData)
                         .filter(d => tmpData[d] && (!this.filters.disaster_number.value || this.filters.disaster_number.value === d.toString()))
                         .reduce((acc, c) => [...acc, ...tmpData[c].value], [])
                         .filter(d => +d[mapping[this.filters.dataset.value]])
 
-            console.log('filtered data by geo', this.data/*.filter(d => d.geoid.toString() === '420')*/)
-        }
+        if(this.filters.dataset.value !== 'Severe Weather without DN'){
+            let geoids = [...new Set(this.data.map(f => f.geoid))]
+            let summedData = geoids.reduce((acc, curr) => {
+                let tmpData =
+                    this.data.filter(f => f.geoid === curr)
+                        .reduce((accTmp, currTemp) => {
+                            Object.keys(currTemp)
+                                .forEach(k => {
+                                    accTmp[k] = !['disaster_number', 'disaster_title', 'geoid'].includes(k) ? (accTmp[k] || 0) + +currTemp[k] : currTemp[k]
+                                })
+                            return accTmp
+                        }, {})
 
+                return [...acc, {...tmpData, geoid: curr}]
+            }, [])
+
+            this.data = summedData
+        }
+        // console.log('filtered data', this.data, this.filters.disaster_number.value, !this.filters.disaster_number.value)
 
         this.paintMap(map, this.data);
     }

@@ -61,7 +61,7 @@ with pa_data as (
                                 and ofd.geoid = sba.geoid
      )
 
-INSERT INTO severe_weather_open_fema_data_merge.disaster_summaries(
+INSERT INTO severe_weather_open_fema_data_merge.disaster_summaries_merge_without_hazard_type(
     year, hazard, geoid, disaster_number, ihp_verified_loss, ha_loss, project_amount, sba_loss)
 select year, hazard, geoid, disaster_number, ihp_verified_loss, ha_loss, project_amount, sba_loss
 from ofd_sba

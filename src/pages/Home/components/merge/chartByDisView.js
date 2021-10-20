@@ -30,7 +30,7 @@ const Process = (falcorCache) => {
     return React.useMemo(() => {
         return {
             swdByDn: get(falcorCache, ['severeWeather', 'byDisaster'], []),
-            swdWithoutDn: get(falcorCache, ['severeWeather', 'swd', 'withoutDisasterNumber', 'year', 'value'], []),
+            swdWithoutDn: get(falcorCache, ['swdOfMerge', 'swd', 'withoutDisasterNumber', 'year', 'value'], []),
 
             ofdByYearByDn: convertDataToNumeric(get(falcorCache, ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title', 'value'], [])).filter(data => data.year >= 2000),
 
