@@ -7,7 +7,7 @@ with nfipPayout as (
     FROM open_fema_data.nfip_claims nfip
              join open_fema_data.disaster_declarations_summaries_v2 dd
                   on date_of_loss BETWEEN incident_begin_date AND incident_end_date
-                      and dd.incident_type = 'Flood'
+                      and dd.incident_type IN ('Flood', 'Hurricane', 'Severe Storm(s)', 'Coastal Storm', 'Tornado', 'Dam/Levee Break', 'Typhoon')
                       and county_code = fips_state_code || fips_county_code
     group by 1, 2, 3)
 
