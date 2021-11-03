@@ -173,7 +173,7 @@ const renderChart = (merged, mergedByHazardByYear, attr, colors = ['#6ee173', '#
                             HoverComp: HoverComp,
                             valueFormat: fnum
                         }}
-                        // groupMode={'grouped'}
+                        groupMode={'grouped'}
                         colors={colors}
                     /> : null}
                 </div>
@@ -195,7 +195,7 @@ const renderChart = (merged, mergedByHazardByYear, attr, colors = ['#6ee173', '#
                                             axisLeft={{format: fnum}}
                                             indexFormat={fnum}
                                             valueFormat={fnum}
-                                            // groupMode={'grouped'}
+                                            groupMode={'grouped'}
                                             colors={['#6ee173', '#5f78c9']}
                                         /> : null}
                                     </div>

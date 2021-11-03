@@ -24,6 +24,12 @@ const Layout = ({children}) => {
 			                //icon: 'fa fa-edit',
 			                className: 'font-medium text-lg'
 			            },
+						{
+			                name: 'Merge',
+			                path: `/merge/`,
+			                //icon: 'fa fa-edit',
+			                className: 'font-medium text-lg'
+			            },
 		    		]}
 		    	/>
 		    </div>

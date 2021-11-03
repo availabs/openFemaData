@@ -173,6 +173,9 @@ class mergeData extends LayerContainer {
             this.geoNames = get(falcor.getCache(), ['geo'], {})
         })
     }
+    // for swd, why are some events not mapping to disasters?
+    // try looking at this wrt geoids and increased time bound.
+    // events in same geo spacial location and within a certain time bound should mean they refer to the same hazard/event
 
     getColorScale(domain) {
         if (this.legend.range.length > domain.length) {
