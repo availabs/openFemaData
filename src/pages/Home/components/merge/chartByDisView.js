@@ -183,13 +183,13 @@ const renderTable = (ofdByYearByDn, swdByDn) => {
                             Header: c,
                             accessor: c
                         })),
-                    ...['ihp_verified_loss', 'project_amount', 'sba_loss', 'nfip', 'total_loss', 'swd_loss']
+                    ...['ihp_verified_loss', 'project_amount', 'sba_loss', 'nfip', 'total_loss', 'swd_property_loss', 'swd_crop_loss', 'swd_loss']
                         .map(c => ({
                             Header: c,
                             accessor: c,
                             sortMethod: (a, b) => Number(a) - Number(b),
                             Cell: d =>
-                                fnum(d.cell.value, true)
+                                fnum(d.cell.value || 0, true)
                             // d.cell.value.toLocaleString()
                         }))
                 ]
