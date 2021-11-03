@@ -16,7 +16,7 @@ const Fetch = (falcor, attr) => {
             falcor.get(
                 ['severeWeather', 'disasterNumbersList'], ['swdOfMerge', 'swd', 'withoutDisasterNumber', 'year'])
                 .then(response => falcor.get(
-                    ['severeWeather', 'byDisaster', get(response, 'json.severeWeather.disasterNumbersList', ['0']), ['year', 'num_events', 'num_episodes', 'total_damage']],
+                    ['severeWeather', 'byDisaster', get(response, 'json.severeWeather.disasterNumbersList', ['0']), ['year', 'num_events', 'num_episodes', 'property_damage', 'crop_damage', 'total_damage']],
                     ['swdOfdMerge', 'indexValues', ['year']],
                     ['swdOfdMerge', 'ofd_sba_new', 'year.disaster_number.disaster_title']
                 ))
@@ -183,7 +183,7 @@ const renderTable = (ofdByYearByDn, swdByDn) => {
                             Header: c,
                             accessor: c
                         })),
-                    ...['ihp_verified_loss', 'project_amount', 'sba_loss', 'nfip', 'total_loss', 'swd_property_loss', 'swd_crop_loss', 'swd_loss']
+                    ...['ihp_verified_loss', 'project_amount', 'sba_loss', 'nfip', 'total_loss', 'swd_property_damage', 'swd_crop_damage', 'swd_loss']
                         .map(c => ({
                             Header: c,
                             accessor: c,
@@ -217,6 +217,8 @@ const Merge = (props) => {
         return data.ofdByYearByDn
             .map(r => {
                 r['swd_loss'] = get(data.swdByDn, [r.disaster_number, 'total_damage'], 0)
+                r['swd_property_damage'] = get(data.swdByDn, [r.disaster_number, 'property_damage'], 0)
+                r['swd_crop_damage'] = get(data.swdByDn, [r.disaster_number, 'crop_damage'], 0)
                 return r
             })
     }, [data.ofdByYearByDn, data.swdByDn])
