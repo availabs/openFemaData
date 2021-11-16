@@ -183,7 +183,7 @@ const renderTable = (ofdByYearByDn, swdByDn) => {
                             Header: c,
                             accessor: c
                         })),
-                    ...['ihp_verified_loss', 'project_amount', 'sba_loss', 'nfip', 'total_loss', 'swd_property_damage', 'swd_crop_damage', 'swd_loss']
+                    ...['ihp_verified_loss', 'project_amount', 'sba_loss', 'nfip', 'usda_crop_damage', 'total_loss', 'swd_property_damage', 'swd_crop_damage', 'swd_loss']
                         .map(c => ({
                             Header: c,
                             accessor: c,
