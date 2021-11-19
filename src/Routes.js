@@ -8,6 +8,8 @@ import ChartView from 'pages/Home/components/merge/chartView'
 import MapView from 'pages/Home/components/merge/mapView'
 import ChartByDisView from 'pages/Home/components/merge/chartByDisView'
 import FemaDisaster from 'pages/Home/disaster'
+import Fusion from 'pages/Home/components/fusion/fusion'
+import FusionMapView from 'pages/Home/components/fusion/fusionMapView'
 
 import Auth from "pages/Auth"
 import NoMatch from 'pages/404';
@@ -24,6 +26,9 @@ export default [
 	ChartView,
 	MapView,
 	ChartByDisView,
+
+	Fusion,
+	FusionMapView,
 
 	Auth,
 

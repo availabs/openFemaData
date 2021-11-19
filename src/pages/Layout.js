@@ -30,6 +30,12 @@ const Layout = ({children}) => {
 			                //icon: 'fa fa-edit',
 			                className: 'font-medium text-lg'
 			            },
+						{
+			                name: 'Fusion',
+			                path: `/fusion/`,
+			                //icon: 'fa fa-edit',
+			                className: 'font-medium text-lg'
+			            },
 		    		]}
 		    	/>
 		    </div>
