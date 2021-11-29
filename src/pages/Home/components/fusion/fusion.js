@@ -148,6 +148,7 @@ const renderTable = (data, idx) => {
                         }))
                 ]
             }
+            initialPageSize={20}
         />
 
     )

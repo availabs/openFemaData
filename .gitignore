@@ -31,3 +31,4 @@ yarn-error.log*
 /tasks/severe-weather-dataloader/locations
 /tasks/sba-uploader/data/*
 /tasks/croploss-dataloader/data/*
+/tasks/nri-dataloader/data/*
