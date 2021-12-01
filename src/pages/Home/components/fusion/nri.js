@@ -35,11 +35,15 @@ const Process = (falcorCache) => {
 }
 
 const ProcessDataForChart = (data) => {
+    const divider = (hazard) =>
+        ['wind', 'hail'].includes(hazard) ? 66 :
+            ['tornado'].includes(hazard) ? 71 : 25;
+
     return React.useMemo(() => {
         const result = hazards.map(h => ({
             hazard: h,
             nri: data.nri[h],
-            fusion: +get(data.fusion.filter(d => d.hazard === h), [0, 'total_loss'], 0)
+            fusion: +get(data.fusion.filter(d => d.hazard === h), [0, 'total_loss'], 0) / divider(h)
         }))
         return {result}
     }, [data])
