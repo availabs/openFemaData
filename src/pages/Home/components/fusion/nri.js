@@ -36,7 +36,7 @@ const Process = (falcorCache) => {
 
 const ProcessDataForChart = (data) => {
     const divider = (hazard) =>
-        ['wind', 'hail'].includes(hazard) ? 66 :
+        ['wind', 'hail'].includes(hazard) ? 28 :
             ['tornado'].includes(hazard) ? 71 : 25;
 
     return React.useMemo(() => {
