@@ -145,6 +145,9 @@ class fusionData extends LayerContainer {
         if(filterName === 'dataset' && newValue !== 'fusion'){
             this.filters.year.disabled = true;
             this.filters.disaster_number.disabled = true;
+
+            this.filters.year.value = 'All Time';
+            this.filters.disaster_number.value = 'All';
         }
         else if(filterName === 'dataset' && newValue === 'fusion'){
             this.filters.year.disabled = false;
