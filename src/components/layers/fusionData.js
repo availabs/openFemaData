@@ -6,10 +6,6 @@ import {getColorRange, useTheme} from "@availabs/avl-components";
 import {fnum} from "../../utils/fnum";
 import {ckmeans} from 'simple-statistics'
 
-const mapping = {
-    'Fusion': 'fusion',
-    'NRI': 'nri'
-}
 class fusionData extends LayerContainer {
 
     // setActive = !!this.viewId
@@ -22,7 +18,7 @@ class fusionData extends LayerContainer {
             type: "dropdown",
             multi: false,
             value: 'fusion',
-            domain: ['fusion', 'nri'],
+            domain: ['fusion', 'fusion annualized', 'nri'],
         },
         year: {
             name: "Year",
@@ -146,7 +142,7 @@ class fusionData extends LayerContainer {
 
     onFilterChange(filterName, newValue, prevValue) {
         // this.legend.format = newValue === 'num_valid_registrations' ? d => fnum(d, false) : fnum;
-        if(filterName === 'dataset' && newValue === 'nri'){
+        if(filterName === 'dataset' && newValue !== 'fusion'){
             this.filters.year.disabled = true;
             this.filters.disaster_number.disabled = true;
         }
@@ -172,11 +168,17 @@ class fusionData extends LayerContainer {
             ['swdOfdMerge', 'fusion', 'geoid.year.disaster_number'],
             ['swdOfdMerge', 'fusion', 'geoid.hazard.year.disaster_number'],
 
+            ['swdOfdMerge', 'fusion', 'annualized', 'geoid'],
+            ['swdOfdMerge', 'fusion', 'annualized', 'geoid.hazard'],
+
             ['nri', 'totals', 'geoid'],
 
             ['swdOfdMerge', 'fusion', 'indexValues', ['hazard', 'year', 'geoid', 'disaster_number']],
         ).then(d => {
-            this.data = this.filters.dataset.value === 'fusion' ? get(d, 'json.swdOfdMerge.fusion', {}) : get(d, 'json.nri.totals.geoid', [])
+            this.data =
+                this.filters.dataset.value === 'fusion' ? get(d, 'json.swdOfdMerge.fusion', {}) :
+                this.filters.dataset.value === 'fusion annualized' ? get(d, 'json.swdOfdMerge.fusion.annualized', {}) :
+                get(d, 'json.nri.totals.geoid', [])
             this.filters.year.domain = ['All Time', ...get(d, 'json.swdOfdMerge.fusion.indexValues.year', [])]
             this.filters.hazard.domain = ['All Hazards', ...get(d, 'json.swdOfdMerge.fusion.indexValues.hazard', [])]
             this.filters.disaster_number.domain = ['All', ...get(d, 'json.swdOfdMerge.fusion.indexValues.disaster_number', [])]
@@ -206,7 +208,7 @@ class fusionData extends LayerContainer {
 
     paintMap(map, data) {
         const attrSelector = (selectedHazard = this.filters.hazard.value) => {
-            return this.filters.dataset.value === 'fusion' ? 'total_loss' :
+            return ['fusion', 'fusion annualized'].includes(this.filters.dataset.value) ? 'total_loss' :
                 selectedHazard === 'All Hazards' ? 'total' : selectedHazard
         }
         const colorScale = this.getColorScale(data.map(d => +(d[attrSelector()])));
@@ -221,7 +223,7 @@ class fusionData extends LayerContainer {
 
     render(map, falcor) {
 
-        if(this.filters.dataset.value === 'fusion'){
+        if(['fusion', 'fusion annualized'].includes(this.filters.dataset.value)){
             let grouping =
                 this.filters.hazard.value === 'All Hazards' && this.filters.year.value === 'All Time' ? 'geoid' :
                     this.filters.hazard.value === 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.year' :
