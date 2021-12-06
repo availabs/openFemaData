@@ -10,6 +10,7 @@ import ChartByDisView from 'pages/Home/components/merge/chartByDisView'
 import FemaDisaster from 'pages/Home/disaster'
 import Fusion from 'pages/Home/components/fusion/fusion'
 import FusionMapView from 'pages/Home/components/fusion/fusionMapView'
+import FusionCompare from 'pages/Home/components/fusion/nri'
 
 import Auth from "pages/Auth"
 import NoMatch from 'pages/404';
@@ -29,6 +30,7 @@ export default [
 
 	Fusion,
 	FusionMapView,
+	FusionCompare,
 
 	Auth,
 

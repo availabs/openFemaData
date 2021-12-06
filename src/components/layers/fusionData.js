@@ -6,13 +6,6 @@ import {getColorRange, useTheme} from "@availabs/avl-components";
 import {fnum} from "../../utils/fnum";
 import {ckmeans} from 'simple-statistics'
 
-const mapping = {
-    'Severe Weather': 'swd',
-    'Open Fema': 'ofd',
-    'Open Fema + SBA': 'ofd_sba_new',
-    'Difference (swd - ofd)': 'Difference',
-    'Difference (swd - ofd + sba)': 'Difference with SBA'
-}
 class fusionData extends LayerContainer {
 
     // setActive = !!this.viewId
@@ -20,6 +13,13 @@ class fusionData extends LayerContainer {
     id = 'Fusion Data'
     data = []
     filters = {
+        dataset: {
+            name: "Dataset",
+            type: "dropdown",
+            multi: false,
+            value: 'fusion',
+            domain: ['fusion', 'fusion annualized', 'nri'],
+        },
         year: {
             name: "Year",
             type: "dropdown",
@@ -142,6 +142,17 @@ class fusionData extends LayerContainer {
 
     onFilterChange(filterName, newValue, prevValue) {
         // this.legend.format = newValue === 'num_valid_registrations' ? d => fnum(d, false) : fnum;
+        if(filterName === 'dataset' && newValue !== 'fusion'){
+            this.filters.year.disabled = true;
+            this.filters.disaster_number.disabled = true;
+
+            this.filters.year.value = 'All Time';
+            this.filters.disaster_number.value = 'All';
+        }
+        else if(filterName === 'dataset' && newValue === 'fusion'){
+            this.filters.year.disabled = false;
+            this.filters.disaster_number.disabled = false;
+        }
     }
 
     receiveProps(props, map, falcor, MapActions) {
@@ -160,9 +171,17 @@ class fusionData extends LayerContainer {
             ['swdOfdMerge', 'fusion', 'geoid.year.disaster_number'],
             ['swdOfdMerge', 'fusion', 'geoid.hazard.year.disaster_number'],
 
+            ['swdOfdMerge', 'fusion', 'annualized', 'geoid'],
+            ['swdOfdMerge', 'fusion', 'annualized', 'geoid.hazard'],
+
+            ['nri', 'totals', 'geoid'],
+
             ['swdOfdMerge', 'fusion', 'indexValues', ['hazard', 'year', 'geoid', 'disaster_number']],
         ).then(d => {
-            this.data = get(d, 'json.swdOfdMerge.fusion', {})
+            this.data =
+                this.filters.dataset.value === 'fusion' ? get(d, 'json.swdOfdMerge.fusion', {}) :
+                this.filters.dataset.value === 'fusion annualized' ? get(d, 'json.swdOfdMerge.fusion.annualized', {}) :
+                get(d, 'json.nri.totals.geoid', [])
             this.filters.year.domain = ['All Time', ...get(d, 'json.swdOfdMerge.fusion.indexValues.year', [])]
             this.filters.hazard.domain = ['All Hazards', ...get(d, 'json.swdOfdMerge.fusion.indexValues.hazard', [])]
             this.filters.disaster_number.domain = ['All', ...get(d, 'json.swdOfdMerge.fusion.indexValues.disaster_number', [])]
@@ -191,11 +210,15 @@ class fusionData extends LayerContainer {
     }
 
     paintMap(map, data) {
-        const colorScale = this.getColorScale(data.map(d => +(d.total_loss)));
+        const attrSelector = (selectedHazard = this.filters.hazard.value) => {
+            return ['fusion', 'fusion annualized'].includes(this.filters.dataset.value) ? 'total_loss' :
+                selectedHazard === 'All Hazards' ? 'total' : selectedHazard
+        }
+        const colorScale = this.getColorScale(data.map(d => +(d[attrSelector()])));
         let colors = {};
 
         data.forEach(d => {
-            colors[d.geoid] = colorScale(+(d.total_loss));
+            colors[d.geoid] = colorScale(+(d[attrSelector()]));
         });
         map.setPaintProperty('counties', 'fill-color',
             ['get', ['get', 'geoid'], ['literal', colors]]);
@@ -203,24 +226,26 @@ class fusionData extends LayerContainer {
 
     render(map, falcor) {
 
-        let grouping =
-            this.filters.hazard.value === 'All Hazards' && this.filters.year.value === 'All Time' ? 'geoid' :
-            this.filters.hazard.value === 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.year' :
-            this.filters.hazard.value !== 'All Hazards' && this.filters.year.value === 'All Time' ? 'geoid.hazard' :
-            this.filters.hazard.value !== 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.hazard.year' : 'geoid'
+        if(['fusion', 'fusion annualized'].includes(this.filters.dataset.value)){
+            let grouping =
+                this.filters.hazard.value === 'All Hazards' && this.filters.year.value === 'All Time' ? 'geoid' :
+                    this.filters.hazard.value === 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.year' :
+                        this.filters.hazard.value !== 'All Hazards' && this.filters.year.value === 'All Time' ? 'geoid.hazard' :
+                            this.filters.hazard.value !== 'All Hazards' && this.filters.year.value !== 'All Time' ? 'geoid.hazard.year' : 'geoid'
 
-        if (this.filters.disaster_number.value !== 'All') grouping = grouping + '.disaster_number'
+            if (this.filters.disaster_number.value !== 'All') grouping = grouping + '.disaster_number'
 
-        let tmpData = this.data[grouping] || [];
+            let tmpData = this.data[grouping] || [];
 
-        this.data =
-            grouping.split('.')
-                .filter(g => g !== 'geoid')
-                .reduce((acc, curr) =>
-                        acc.filter(a => a[curr] === this.filters[curr].value)
-                    , tmpData)
+            this.data =
+                grouping.split('.')
+                    .filter(g => g !== 'geoid')
+                    .reduce((acc, curr) =>
+                            acc.filter(a => a[curr] === this.filters[curr].value)
+                        , tmpData)
 
-        console.log('dat', this.data)
+        }
+
         this.paintMap(map, this.data);
     }
 }

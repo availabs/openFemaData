@@ -6,47 +6,47 @@ import {BarGraph} from "../../../../components/avl-graph/src";
 import {fnum} from "../../../../utils/fnum";
 import {RenderTabs} from "./Tabs";
 
-const ATTRIBUTES = ['year', 'geoid', 'hazard', 'group_by', 'disaster_title'];
+const hazards = [
+    'avalanche', 'coastal', 'coldwave', 'drought', 'earthquake', 'hail', 'heatwave', 'hurricane',
+    'icestorm', 'landslide', 'lightning', 'riverine', 'wind', 'tornado', 'tsunami', 'volcano',
+    'wildfire', 'winterweat'
+]
 
-const Fetch = (falcor, attr) => {
+const Fetch = (falcor) => {
     React.useEffect(() => {
         function fetchData() {
             falcor.get(
-                ['swdOfdMerge', 'fusion', 'year.hazard'],
-                ['swdOfdMerge', 'fusion', 'year.disaster_number'],
+                ['nri', 'totals', 'all'],
+                ['swdOfdMerge', 'fusion', 'hazard']
                 )
         }
 
         return fetchData()
-    }, [attr, falcor])
+    }, [falcor])
 }
 
-const Process = (falcorCache, attr) => {
+const Process = (falcorCache) => {
     return React.useMemo(() => {
         return {
-            fusionByYearByHaz: get(falcorCache, ['swdOfdMerge', 'fusion', 'year.hazard', 'value'], []).filter(d => d.year >= 2000),
-            fusionByYearByDN: get(falcorCache, ['swdOfdMerge', 'fusion', 'year.disaster_number', 'value'], []).filter(d => d.year >= 2000),
+            nri: get(falcorCache, ['nri', 'totals', 'all', 'value', 0], []),
+            fusion: get(falcorCache, ['swdOfdMerge', 'fusion', 'hazard', 'value'], []),
         }
     }, [falcorCache])
 }
 
-const ProcessDataForChart = (data, attrStack, attrX = 'year') => {
+const ProcessDataForChart = (data) => {
+    const divider = (hazard) =>
+        ['wind', 'hail'].includes(hazard) ? 66 :
+            ['tornado'].includes(hazard) ? 71 : 25;
+
     return React.useMemo(() => {
-        let result = [...new Set(data.map(d => d[attrX]))], indexValues = new Set()
-        result = result.map(x => {
-                    return {
-                        [attrX]: x,
-                        ...data.filter(d => d[attrX] === x)
-                            .reduce((acc, curr) => {
-                                let i = curr[attrStack] || `No ${attrStack.replace('_', ' ')}`
-                                indexValues.add(i)
-                                acc[i] = +curr.total_loss
-                                return acc
-                            }, {})
-                    }
-            })
-        return {result, indexValues: [...indexValues]}
-    }, [attrStack, attrX, data])
+        const result = hazards.map(h => ({
+            hazard: h,
+            nri: data.nri[h],
+            fusion: +get(data.fusion.filter(d => d.hazard === h), [0, 'total_loss'], 0) / divider(h)
+        }))
+        return {result}
+    }, [data])
 }
 
 const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
@@ -97,10 +97,11 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
     )
 }
 
-const renderChart = (merged, attr, colors = ['#6ee173', '#5f78c9'], keys = ['total_loss']) => {
+const renderChart = (merged, attr, colors = ['#6ee173', '#5f78c9'], keys, title='') => {
     return (
         <>
             <div className='pt-4 pb-3 px-4 bg-white'>
+                <h4>{title}</h4>
                 <div className='p-2' style={{height: '500px'}}>
                     {merged.length ? <BarGraph
                         data={merged}
@@ -123,49 +124,17 @@ const renderChart = (merged, attr, colors = ['#6ee173', '#5f78c9'], keys = ['tot
     )
 }
 
-const renderTable = (data, idx) => {
 
-    return (
-        <Table
-            data={data}
-            columns={
-                [
-                    ...['hazard']
-                        .map(c => ({
-                            Header: c,
-                            accessor: c,
-                            disableFilters:true
-                        })),
-                    ...idx
-                        .map(c => ({
-                            Header: c.toString(),
-                            accessor: c.toString(),
-                            disableFilters: true,
-                            sortMethod: (a, b) => Number(a) - Number(b),
-                            Cell: d =>
-                                fnum(d.cell.value || 0, true)
-                            // d.cell.value.toLocaleString()
-                        }))
-                ]
-            }
-            initialPageSize={20}
-        />
-
-    )
-}
-
-const Fusion = (props) => {
-    const [view, setView] = React.useState('Chart');
+const Compare = (props) => {
+    const [view, setView] = React.useState('Compare');
     const {falcor, falcorCache} = useFalcor();
-    const attr = 'year'
 
-    Fetch(falcor, attr)
 
-    const data = Process(falcorCache, attr)
+    Fetch(falcor)
 
-    const {result: dataByyearByHaz, indexValues} = ProcessDataForChart(data.fusionByYearByHaz, 'hazard')
-    const {result: databyHazByyear, indexValues: idx} = ProcessDataForChart(data.fusionByYearByHaz, 'year', 'hazard')
-    const {result: dataByyearByDN, indexValues: indexValuesDN} = ProcessDataForChart(data.fusionByYearByDN, 'disaster_number')
+    const data = Process(falcorCache)
+
+    const {result: chartData} = ProcessDataForChart(data)
 
     return (
         <AdminLayout>
@@ -174,18 +143,18 @@ const Fusion = (props) => {
                     <h3 className='inline font-bold text-3xl'>Fusion</h3>
                 </div>
                 {RenderTabs(view, setView)}
-                {renderChart(dataByyearByDN, attr, null, indexValuesDN)}
-                {renderChart(dataByyearByHaz, attr, null, indexValues)}
-                {renderTable(databyHazByyear, idx)}
+
+                {renderChart(chartData, 'hazard', null, ['nri'], 'NRI')}
+                {renderChart(chartData, 'hazard', null, ['fusion'], 'Fusion')}
             </div>
         </AdminLayout>
     )
 }
 
 export default {
-    path: "/fusion",
+    path: "/fusion/compare",
     exact: true,
     auth: false,
-    component: Fusion,
+    component: Compare,
     layout: 'Simple'
 }
