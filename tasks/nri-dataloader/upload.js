@@ -45,7 +45,7 @@ const loadFiles = async (table = 'nri') => {
                     let lines = d.split(/\r?\n/).slice(1, d.split(/\r?\n/).length)
 
                     resolve(
-                        _.chunk(lines, 1500)
+                        _.chunk(lines, 50)
                             .reduce(async (accLines, currLines, linesIndex) => {
 
                                 // if (linesIndex < 2 ) return Promise.resolve();
@@ -101,12 +101,12 @@ const datasourceEntry = async () => {
             start_date, end_date, record_count)
 
         SELECT 'National Risk Index' title,
-               '' description, 'open_fema_data.nri' "table",
+               '' description, 'national_risk_index.nri_counties_november_2021' "table",
                'https://hazards.fema.gov/nri/data-resources' data_url, '' data_dictionary,
                'https://hazards.fema.gov/nri/' landing_page, 'Federal Emergency Management Agency' publisher,
                (SELECT NOW()) last_refresh,
                null start_date, null end_date,
-               (select count(1) record_count from open_fema_data.nri) record_count
+               (select count(1) record_count from national_risk_index.nri_counties_november_2021) record_count
         ON CONFLICT ON CONSTRAINT datasources_table_key
             DO UPDATE
             SET
@@ -121,7 +121,7 @@ const datasourceEntry = async () => {
 --                 start_date = null,
 --                 end_date = null,
                 record_count = (select count(1) record_count from open_fema_data.nri)
-        WHERE public.datasources."table" = 'open_fema_data.nri'
+        WHERE public.datasources."table" = 'national_risk_index.nri_counties_november_2021'
         `
 
     await db.query(sql)

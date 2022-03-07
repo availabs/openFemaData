@@ -9,6 +9,7 @@ import MapView from 'pages/Home/components/merge/mapView'
 import ChartByDisView from 'pages/Home/components/merge/chartByDisView'
 import FemaDisaster from 'pages/Home/disaster'
 import Fusion from 'pages/Home/components/fusion/fusion'
+import PerBasisCharts from "./pages/Home/components/perBasisCharts";
 import FusionMapView from 'pages/Home/components/fusion/fusionMapView'
 import FusionCompare from 'pages/Home/components/fusion/nri'
 
@@ -32,6 +33,7 @@ export default [
 	FusionMapView,
 	FusionCompare,
 
+	PerBasisCharts,
 	Auth,
 
 	// -- Misc
