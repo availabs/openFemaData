@@ -166,6 +166,7 @@ const Index = (props) => {
                 {
                     Object.keys(data.stat)
                         .filter(event => event !== 'null')
+                        .sort((a,b) => a.localeCompare(b))
                         .map(event =>
                             <div className={`p-4 pb-3 px-6`}>
                                 <div className={`text-2xl capitalize font-bold pt-4`}>{event}</div>
