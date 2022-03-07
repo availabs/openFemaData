@@ -8,9 +8,10 @@ const Fetch = (falcor, attr) => {
     React.useEffect(() => {
         function fetchData() {
             falcor.get(
-                ['per_basis', 'index', 'fema_event_type'],
+                ['per_basis', 'index', 'event_type'],
                 ['per_basis', 'stat'],
                 ['per_basis', 'bins', ['building_loss_ratio_per_basis', 'crop_loss_ratio_per_basis', 'population_loss_ratio_per_basis', 'fema_building_loss_ratio_per_basis']],
+                ['per_basis', 'zero_loss', ['building_loss_ratio_per_basis', 'crop_loss_ratio_per_basis', 'population_loss_ratio_per_basis', 'fema_building_loss_ratio_per_basis']],
                 )
         }
 
@@ -21,13 +22,19 @@ const Fetch = (falcor, attr) => {
 const Process = (falcorCache) => {
     return React.useMemo(() => {
         return {
-            femaEventTypeIndex: get(falcorCache, ['per_basis', 'index', 'fema_event_type', 'value'], []),
+            femaEventTypeIndex: get(falcorCache, ['per_basis', 'index', 'event_type', 'value'], []),
             stat: get(falcorCache, ['per_basis', 'stat', 'value'], {}),
             bins: {
                 building_loss_ratio_per_basis: get(falcorCache, ['per_basis', 'bins', 'building_loss_ratio_per_basis', 'value'], []),
                 crop_loss_ratio_per_basis: get(falcorCache, ['per_basis', 'bins', 'crop_loss_ratio_per_basis', 'value'], []),
                 population_loss_ratio_per_basis: get(falcorCache, ['per_basis', 'bins', 'population_loss_ratio_per_basis', 'value'], []),
                 fema_loss_ratio_per_basis: get(falcorCache, ['per_basis', 'bins', 'fema_building_loss_ratio_per_basis', 'value'], []),
+            },
+            zero_loss: {
+                building_loss_ratio_per_basis: get(falcorCache, ['per_basis', 'zero_loss', 'building_loss_ratio_per_basis', 'value'], []),
+                crop_loss_ratio_per_basis: get(falcorCache, ['per_basis', 'zero_loss', 'crop_loss_ratio_per_basis', 'value'], []),
+                population_loss_ratio_per_basis: get(falcorCache, ['per_basis', 'zero_loss', 'population_loss_ratio_per_basis', 'value'], []),
+                fema_loss_ratio_per_basis: get(falcorCache, ['per_basis', 'zero_loss', 'fema_building_loss_ratio_per_basis', 'value'], []),
             },
         }
     }, [falcorCache])
@@ -37,9 +44,9 @@ const ProcessDataForChart = (data, attrX = 'bin') => {
     return React.useMemo(() => {
         let res = {}
 
-        data.map(d => d.fema_event_type)
+        data.map(d => d.event_type)
             .forEach(event => {
-                let tmpData = get(data.filter(d => d.fema_event_type === event),[0], {});
+                let tmpData = get(data.filter(d => d.event_type === event),[0], {});
 
                 res[event] = Object.keys(tmpData)
                     .filter(key => key.includes('bin'))
@@ -147,6 +154,7 @@ const Index = (props) => {
 
     const data = Process(falcorCache)
     const chartData = ProcessDataForChart(data.bins[`${consequenceType.toLowerCase()}_loss_ratio_per_basis`])
+    const zeroLossData = data.zero_loss[`${consequenceType.toLowerCase()}_loss_ratio_per_basis`]
 
     return (
         <AdminLayout>
@@ -157,19 +165,24 @@ const Index = (props) => {
                 </div>
                 {
                     Object.keys(data.stat)
+                        .filter(event => event !== 'null')
                         .map(event =>
                             <div className={`p-4 pb-3 px-6`}>
                                 <div className={`text-2xl capitalize font-bold pt-4`}>{event}</div>
                                 <div className={`pt-4 grid gap-3 grid-cols-4`}>
                                     {
                                         Object.keys(data.stat[event])
-                                            .filter(s => s !== 'fema_event_type')
+                                            .filter(s => s !== 'event_type')
                                             .map(s => (
                                                 <div className={`grid grid-cols-1 ${s.split('_')[0] === consequenceType.toLowerCase() ? 'font-bold' : ''}`}>
                                                     <div className={`text-center capitalize`}>{s.split('_').join(' ')}</div>
                                                     <div className={`text-center`}>{data.stat[event][s]}</div>
                                                 </div>))
                                     }
+                                    <div className={`grid grid-cols-1`}>
+                                        <div className={`text-center capitalize`}># Zero Loss Events</div>
+                                        <div className={`text-center`}>{zeroLossData[event]}</div>
+                                    </div>
                                 </div>
                                 {renderChart(get(chartData, event, []))}
                             </div>
