@@ -36,6 +36,12 @@ const Layout = ({children}) => {
 			                //icon: 'fa fa-edit',
 			                className: 'font-medium text-lg'
 			            },
+						{
+			                name: 'Per Basis',
+			                path: `/perbasis/`,
+			                //icon: 'fa fa-edit',
+			                className: 'font-medium text-lg'
+			            },
 		    		]}
 		    	/>
 		    </div>
