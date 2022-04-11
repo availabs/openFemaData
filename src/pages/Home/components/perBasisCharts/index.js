@@ -40,23 +40,28 @@ const Process = (falcorCache) => {
     }, [falcorCache])
 }
 
-const ProcessDataForChart = (data, attrX = 'bin') => {
+const ProcessDataForChart = (data, femaData, consequenceType) => {
     return React.useMemo(() => {
         let res = {}
 
         data.map(d => d.event_type)
             .forEach(event => {
                 let tmpData = get(data.filter(d => d.event_type === event),[0], {});
+                let tmpFEMAData = get(femaData.filter(d => d.event_type === event),[0], {});
+                res[event] = []
 
-                res[event] = Object.keys(tmpData)
+                Object.keys(tmpData)
                     .filter(key => key.includes('bin'))
-                    .map((curr) => {
-                        return {bin: curr, value: +tmpData[curr]}
+                    .forEach((curr) => {
+                        res[event].push(
+                            {bin: curr, [consequenceType]: +tmpData[curr], fema: tmpFEMAData[curr] ? +tmpFEMAData[curr] : 0, type: 'base'},
+                        )
                     })
             })
 
+        console.log('res', res)
         return res
-    }, [data])
+    }, [data, femaData])
 }
 
 const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
@@ -107,7 +112,8 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
     )
 }
 
-const renderChart = (merged, attr='bin', colors = ['#6ee173', '#5f78c9'], keys = ['value']) => {
+const renderChart = (merged, attr='bin', colors = ['#6ee173', '#5f78c9'], keys = ['value', 'fema']) => {
+    if (!merged || !Object.keys(merged).length) return <></>
     return (
         <>
             <div className='pt-4 pb-3 px-4 bg-white'>
@@ -125,7 +131,7 @@ const renderChart = (merged, attr='bin', colors = ['#6ee173', '#5f78c9'], keys =
                             HoverComp: HoverComp,
                             // valueFormat: fnum
                         }}
-                        // groupMode={'grouped'}
+                        groupMode={'grouped'}
                         colors={colors}
                     /> : null}
                 </div>
@@ -153,7 +159,7 @@ const Index = (props) => {
     Fetch(falcor, attr)
 
     const data = Process(falcorCache)
-    const chartData = ProcessDataForChart(data.bins[`${consequenceType.toLowerCase()}_loss_ratio_per_basis`])
+    const chartData = ProcessDataForChart(data.bins[`${consequenceType.toLowerCase()}_loss_ratio_per_basis`], data.bins[`fema_loss_ratio_per_basis`], consequenceType)
     const zeroLossData = data.zero_loss[`${consequenceType.toLowerCase()}_loss_ratio_per_basis`]
 
     return (
@@ -185,7 +191,7 @@ const Index = (props) => {
                                         <div className={`text-center`}>{zeroLossData[event]}</div>
                                     </div>
                                 </div>
-                                {renderChart(get(chartData, event, []))}
+                                {renderChart(get(chartData, event, []), 'bin', null, [consequenceType, 'fema'])}
                             </div>
                         )
                 }
