@@ -15,6 +15,7 @@ class HLRChoroplethoptions extends LayerContainer {
     name = 'HLR'
     id = 'HLR'
     data = []
+    dataSRC = 'per_basis'
     filters = {
         hazard: {
             name: "Hazard",
@@ -22,7 +23,7 @@ class HLRChoroplethoptions extends LayerContainer {
             multi: false,
             value: 'riverine',
             domain: [
-                "avalanche", "coastal", "coldwave", "drought", "hail", "heatwave", "hurricane", "icestorm", "landslide", "lightning", "riverine", "tornado", "tsunami", "volcano", "wildfire", "wind", "winterweat"
+                "avalanche", "coastal", "coldwave", "drought", "earthquake", "hail", "heatwave", "hurricane", "icestorm", "landslide", "lightning", "riverine", "tornado", "tsunami", "volcano", "wildfire", "wind", "winterweat"
             ],
         },
 
@@ -31,7 +32,8 @@ class HLRChoroplethoptions extends LayerContainer {
             type: "dropdown",
             multi: false,
             value: 'hlr_b',
-            domain: [{key: 'hlr_b', label: 'Buildings'}, {key: 'hlr_c', label: 'Crop'}, {key: 'hlr_p', label: 'Population'}, {key: 'hlr_f', label: 'Fema Buildings'}, ],
+            domain: [{key: 'hlr_b', label: 'Buildings'}, {key: 'hlr_c', label: 'Crop'}, {key: 'hlr_p', label: 'Population'}, {key: 'hlr_f', label: 'Fema Buildings'},
+                {key: 'hlrb', label: 'NRI Buildings'}, {key: 'hlra', label: 'NRI Crop'}, {key: 'hlrp', label: 'NRI Population'},],
             valueAccessor: d => d.key,
             accessor: d => d.label
         },
@@ -75,7 +77,7 @@ class HLRChoroplethoptions extends LayerContainer {
         },
         callback: (layerId, features, lngLat) => {
             return features.reduce((a, feature) => {
-                let d = this.data.filter(d => d.geoid === feature.properties.geoid && d.nri_category === this.filters.hazard.value)
+                let d = this.data[this.dataSRC].filter(d => d.geoid === feature.properties.geoid && d.nri_category === this.filters.hazard.value)
                 return [
                     ...a,
                     ['County', get(this.geoNames[feature.properties.geoid], 'name', feature.properties.geoid)],
@@ -128,20 +130,31 @@ class HLRChoroplethoptions extends LayerContainer {
         map.fitBounds([-125.0011, 24.9493, -66.9326, 49.5904])
     }
 
+    onFilterChange(filterName, newValue, prevValue) {
+
+        this.dataSRC =
+            filterName === 'consq' ?
+                get(this.filters[filterName].domain.filter(d => d.key === newValue), [0, 'label'], '').includes('NRI') ? 'nri' : 'per_basis' :
+                this.dataSRC
+
+    }
+
     receiveProps(props, map, falcor, MapActions) {
         this.fetchData(falcor).then(() => this.render(map, falcor))
     }
 
     fetchData(falcor) {
         return falcor.get(
-            ['per_basis', 'hlr']
+            ['per_basis', 'hlr'],
+            ['nri', 'hlr']
         ).then(d => {
-            this.data = get(d, ['json', 'per_basis', 'hlr'], [])
-            console.log('this.data', this.data)
+            this.data = {
+                per_basis: get(d, ['json', 'per_basis', 'hlr'], []),
+                nri: get(d, ['json', 'nri', 'hlr'], [])
+            }
         }).then(() => {
-            return falcor.get(['geo', _.uniq(this.data.map(d => d.geoid)), 'name']).then(names => {
+            return falcor.get(['geo', _.uniq(this.data[this.dataSRC].map(d => d.geoid)), 'name']).then(names => {
                 this.geoNames = get(names, ['json', 'geo'], {})
-                console.log('??',  names)
             })
         })
     }
@@ -157,13 +170,13 @@ class HLRChoroplethoptions extends LayerContainer {
 
     paintMap(map) {
         const colorScale = this.getColorScale(
-            this.data
+            this.data[this.dataSRC]
                 .filter(d => d.nri_category === this.filters.hazard.value)
-                .map(d => d[this.filters.consq.value]));
+                .map(d => d[this.filters.consq.value]).filter(d => d));
         let colors = {};
 
-        this.data
-            .filter(d => d.nri_category === this.filters.hazard.value)
+        this.data[this.dataSRC]
+            .filter(d => d.nri_category === this.filters.hazard.value && d[this.filters.consq.value])
             .forEach(d => {
             colors[d.geoid] = colorScale(d[this.filters.consq.value]);
         });
