@@ -34,19 +34,22 @@ const Process = (falcorCache) => {
     }, [falcorCache])
 }
 
-const ProcessDataForChart = (data) => {
+const ProcessDataForChart = (data, falcorCache) => {
+    console.log('processing', (data.nri || []).length, (data.fusion || []).length, falcorCache)
     const divider = (hazard) =>
         ['wind', 'hail'].includes(hazard) ? 66 :
             ['tornado'].includes(hazard) ? 71 : 25;
 
     return React.useMemo(() => {
+        if ((data.nri || []).length + (data.fusion || []).length === 0) return null;
+
         const result = hazards.map(h => ({
             hazard: h,
             nri: data.nri[h],
             fusion: +get(data.fusion.filter(d => d.hazard === h), [0, 'total_loss'], 0) / divider(h)
         }))
-        return {result}
-    }, [data])
+        return result
+    }, [data, falcorCache])
 }
 
 const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
@@ -98,6 +101,7 @@ const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
 }
 
 const renderChart = (merged, attr, colors = ['#6ee173', '#5f78c9'], keys, title='') => {
+    if(!merged) return <></>
     return (
         <>
             <div className='pt-4 pb-3 px-4 bg-white'>
@@ -134,8 +138,8 @@ const Compare = (props) => {
 
     const data = Process(falcorCache)
 
-    const {result: chartData} = ProcessDataForChart(data)
-
+    const chartData = ProcessDataForChart(data, falcorCache)
+    console.log('??', chartData, falcorCache)
     return (
         <AdminLayout>
             <div className="w-full max-w-7xl mx-auto pb-5">
