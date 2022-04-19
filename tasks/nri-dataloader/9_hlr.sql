@@ -250,9 +250,9 @@ SELECT mapping.fips,
 FROM severe_weather_new.fips_to_regions_and_surrounding_counties mapping
          JOIN county
               on county.fips = mapping.fips
-         JOIN national
-              ON county.nri_category = national.nri_category
-         JOIN regional
-              ON mapping.region = regional.region AND county.nri_category = regional.nri_category
-         JOIN surrounding
-              ON mapping.surrounding_counties = surrounding.fips
+         LEFT JOIN national
+                   ON county.nri_category = national.nri_category
+         LEFT JOIN regional
+                   ON mapping.region = regional.region AND county.nri_category = regional.nri_category
+         LEFT JOIN surrounding
+                   ON mapping.surrounding_counties = surrounding.fips and county.nri_category = surrounding.nri_category

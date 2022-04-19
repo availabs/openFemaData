@@ -3,6 +3,7 @@ import get from 'lodash.get'
 import {useFalcor, useTheme, Select} from '@availabs/avl-components'
 import AdminLayout from '../../../Layout'
 import {BarGraph} from "../../../../components/avl-graph/src";
+import {RenderTabs} from "./Tabs";
 
 const Fetch = (falcor, attr) => {
     React.useEffect(() => {
@@ -152,6 +153,7 @@ const renderDropdown = (consequenceType, setConsequenceType) => {
 }
 
 const Index = (props) => {
+    const [view, setView] = React.useState('Chart');
     const {falcor, falcorCache} = useFalcor();
     const [consequenceType, setConsequenceType] = useState('Building')
     const attr = 'bin'
@@ -169,6 +171,7 @@ const Index = (props) => {
                     <h3 className='inline font-bold text-3xl'>Ratios Per Basis</h3>
                     <span className={`center-right`}>{renderDropdown(consequenceType, setConsequenceType)}</span>
                 </div>
+                {RenderTabs(view, setView)}
                 {
                     Object.keys(data.stat)
                         .filter(event => event !== 'null')
