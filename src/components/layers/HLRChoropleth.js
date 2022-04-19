@@ -42,7 +42,7 @@ class HLRChoroplethoptions extends LayerContainer {
         type: "quantile",
         domain: [],
         range: getColorRange(7, "YlOrRd", true),
-        show: true,
+        show: false,
     }
 
     onHover = {
