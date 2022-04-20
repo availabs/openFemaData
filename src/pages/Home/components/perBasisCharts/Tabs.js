@@ -7,6 +7,7 @@ function classNames(...classes) {
 export const RenderTabs = (view, setView) => {
     const tabs = [{name: 'Chart', href: '/perbasis/', current: view === 'Chart'},
         {name: 'Map', href: '/perbasis/map', current: view === 'Map'},
+        {name: 'Compare', href: '/perbasis/compare', current: view === 'Compare'},
     ];
 
     return (
