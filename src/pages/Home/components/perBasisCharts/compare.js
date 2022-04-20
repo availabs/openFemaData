@@ -47,6 +47,8 @@ const ProcessDataForChart = (data, falcorCache) => {
             per_basis: hazards.map(h => ({
                 hazard: h,
                 buildings: get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'property_damage']),
+                crop: get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'crop_damage']),
+                population: get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'population_damage']),
                 fema_buildings: get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'fema_property_damage'])
             }))
         }
@@ -150,7 +152,7 @@ const Compare = (props) => {
                 {RenderTabs(view, setView)}
 
                 {renderChart(chartData.nri, 'hazard', null, ['buildings', 'population', 'crop'], 'NRI')}
-                {renderChart(chartData.per_basis, 'hazard', null, ['buildings'], 'SWD Buildings')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['buildings', 'population', 'crop'], 'SWD Buildings')}
                 {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings'], 'FEMA Buildings')}
             </div>
         </AdminLayout>
