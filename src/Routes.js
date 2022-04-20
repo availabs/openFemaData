@@ -11,6 +11,7 @@ import FemaDisaster from 'pages/Home/disaster'
 import Fusion from 'pages/Home/components/fusion/fusion'
 import PerBasisCharts from "./pages/Home/components/perBasisCharts";
 import PerBasisMapView from "./pages/Home/components/perBasisCharts/mapView";
+import PerBasisCompare from "./pages/Home/components/perBasisCharts/compare";
 import FusionMapView from 'pages/Home/components/fusion/fusionMapView'
 import FusionCompare from 'pages/Home/components/fusion/nri'
 
@@ -36,6 +37,7 @@ export default [
 
 	PerBasisCharts,
 	PerBasisMapView,
+	PerBasisCompare,
 	Auth,
 
 	// -- Misc

@@ -16,8 +16,8 @@ const Fetch = (falcor) => {
     React.useEffect(() => {
         function fetchData() {
             falcor.get(
-                ['nri', 'totals', 'all'],
-                ['swdOfdMerge', 'fusion', 'hazard']
+                ['nri', 'totals', 'detailed', 'all'],
+                ['per_basis', 'totals']
                 )
         }
 
@@ -28,26 +28,28 @@ const Fetch = (falcor) => {
 const Process = (falcorCache) => {
     return React.useMemo(() => {
         return {
-            nri: get(falcorCache, ['nri', 'totals', 'all', 'value', 0], []),
-            fusion: get(falcorCache, ['swdOfdMerge', 'fusion', 'hazard', 'value'], []),
+            nri: get(falcorCache, ['nri', 'totals', 'detailed', 'all', 'value', 0]),
+            per_basis: get(falcorCache, ['per_basis', 'totals', 'value']),
         }
     }, [falcorCache])
 }
 
 const ProcessDataForChart = (data, falcorCache) => {
-    const divider = (hazard) =>
-        ['wind', 'hail'].includes(hazard) ? 66 :
-            ['tornado'].includes(hazard) ? 71 : 25;
-
     return React.useMemo(() => {
-        if ((data.nri || []).length + (data.fusion || []).length === 0) return null;
-
-        const result = hazards.map(h => ({
-            hazard: h,
-            nri: data.nri[h],
-            fusion: +get(data.fusion.filter(d => d.hazard === h), [0, 'total_loss'], 0) / divider(h)
-        }))
-        return result
+        if (!data.nri || !data.per_basis) return {};
+        return {
+            nri: hazards.map(h => ({
+                hazard: h,
+                buildings: data.nri[h + '_buildings'],
+                crop: data.nri[h + '_crop'],
+                population: data.nri[h + '_population']
+            })),
+            per_basis: hazards.map(h => ({
+                hazard: h,
+                buildings: get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'property_damage']),
+                fema_buildings: get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'fema_property_damage'])
+            }))
+        }
     }, [data, falcorCache])
 }
 
@@ -138,6 +140,7 @@ const Compare = (props) => {
     const data = Process(falcorCache)
 
     const chartData = ProcessDataForChart(data, falcorCache)
+
     return (
         <AdminLayout>
             <div className="w-full max-w-7xl mx-auto pb-5">
@@ -146,15 +149,16 @@ const Compare = (props) => {
                 </div>
                 {RenderTabs(view, setView)}
 
-                {renderChart(chartData, 'hazard', null, ['nri'], 'NRI')}
-                {renderChart(chartData, 'hazard', null, ['fusion'], 'Fusion')}
+                {renderChart(chartData.nri, 'hazard', null, ['buildings', 'population', 'crop'], 'NRI')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['buildings'], 'SWD Buildings')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings'], 'FEMA Buildings')}
             </div>
         </AdminLayout>
     )
 }
 
 export default {
-    path: "/fusion/compare",
+    path: "/perbasis/compare",
     exact: true,
     auth: false,
     component: Compare,
