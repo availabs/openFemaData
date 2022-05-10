@@ -160,7 +160,7 @@ class HLRChoroplethoptions extends LayerContainer {
     }
 
     getColorScale(domain) {
-        if (this.legend.range.length > domain.length) return this.legend.domain = []
+        if (this.legend.range.length > domain.length) return () => '#ccc'
         this.legend.domain = ckmeans(domain, this.legend.range.length).map(d => Math.min(...d))
 
         return scaleLinear()
