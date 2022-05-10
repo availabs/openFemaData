@@ -1,0 +1,27 @@
+	CASE
+				WHEN lower(incident_type) = 'coastal storm'
+				THEN 'coastal'
+	WHEN lower(incident_type) IN ('dam/levee break', 'flood', 'severe storm')
+				THEN 'riverine'
+	WHEN lower(incident_type) = 'drought'
+				THEN 'drought'
+	WHEN lower(incident_type) = 'fire'
+				THEN 'wildfire'
+	WHEN lower(incident_type) = 'freezing'
+				THEN 'coldwave'
+	WHEN lower(incident_type) = 'hurricane'
+				THEN 'hurricane'
+	WHEN lower(incident_type) = 'mud/landslide'
+				THEN 'landslide'
+	WHEN lower(incident_type) = 'severe ice storm'
+				THEN 'icestorm'
+	WHEN lower(incident_type) = 'snow'
+				THEN 'winterweat'
+	WHEN lower(incident_type) = 'tornado'
+				THEN 'tornado'
+	WHEN lower(incident_type) = 'tsunami'
+				THEN 'tsunami'
+	WHEN lower(incident_type) = 'volcano'
+				THEN 'volcano'
+				ELSE incident_type
+			END incident_type,

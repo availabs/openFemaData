@@ -1,12 +1,40 @@
 
 with disaster_declarations_summary as (
     SELECT a.disaster_number,
+           CASE
+               WHEN lower(incident_type) = 'coastal storm'
+                   THEN 'coastal'
+               WHEN lower(incident_type) IN ('dam/levee break', 'flood', 'severe storm')
+                   THEN 'riverine'
+               WHEN lower(incident_type) = 'drought'
+                   THEN 'drought'
+               WHEN lower(incident_type) = 'fire'
+                   THEN 'wildfire'
+               WHEN lower(incident_type) = 'freezing'
+                   THEN 'coldwave'
+               WHEN lower(incident_type) = 'hurricane'
+                   THEN 'hurricane'
+               WHEN lower(incident_type) = 'mud/landslide'
+                   THEN 'landslide'
+               WHEN lower(incident_type) = 'severe ice storm'
+                   THEN 'icestorm'
+               WHEN lower(incident_type) = 'snow'
+                   THEN 'winterweat'
+               WHEN lower(incident_type) = 'tornado'
+                   THEN 'tornado'
+               WHEN lower(incident_type) = 'tsunami'
+                   THEN 'tsunami'
+               WHEN lower(incident_type) = 'volcano'
+                   THEN 'volcano'
+               ELSE incident_type
+               END incident_type
+            ,
            ARRAY_AGG(fips_state_code || fips_county_code)    counties,
            MIN(incident_begin_date)                          incident_begin_date,
            MAX(incident_end_date)                            incident_end_date
     FROM open_fema_data.disaster_declarations_summaries_v2 a
-    WHERE fips_state_code || fips_county_code = '36001'
-    GROUP BY 1
+    WHERE fips_state_code || fips_county_code = '12087'
+    GROUP BY 1, 2
 ),
      disaster_number_to_event_id_mapping_without_hazard_type as (
          SELECT distinct disaster_number, event_id
@@ -15,6 +43,7 @@ with disaster_declarations_summary as (
                        ON substring(geoid, 1, 5) = any (d.counties)
                            AND begin_date_time >= incident_begin_date
                            AND end_date_time <= incident_end_date
+                           AND incident_type = event_type_formatted
          ORDER BY disaster_number
      ),
      pa_data as (
@@ -25,7 +54,7 @@ with disaster_declarations_summary as (
                 sum(coalesce(project_amount, 0)) project_amount
          from open_fema_data.public_assistance_funded_projects_details_v1
          where dcc not in ('A', 'B', 'Z')
-           AND lpad(state_number_code::text, 2, '0') || lpad(county_code::text, 3, '0') = '36001'
+           AND lpad(state_number_code::text, 2, '0') || lpad(county_code::text, 3, '0') = '12087'
          group by 1, 2, 3, 4
      ),
      ihp as (
@@ -34,7 +63,7 @@ with disaster_declarations_summary as (
                 sum(coalesce(ha_amount, 0)) 												   as ha_loss
          FROM open_fema_data.individuals_and_households_program_valid_registrations_v1 ihp
          where coalesce(rpfvl, 0) + coalesce(ppfvl, 0) + coalesce(ha_amount, 0) > 0
-           AND geoid = '36001'
+           AND geoid = '12087'
          group by 1,2,3,4
      ),
      ofd as (
@@ -60,7 +89,7 @@ with disaster_declarations_summary as (
              fema_disaster_number disaster_number,
              SUM(coalesce(total_verified_loss, 0)) sba_loss
          FROM public.sba_disaster_loan_data_new
-         WHERE geoid = '36001'
+         WHERE geoid = '12087'
          GROUP BY 1, 2, 3
      ),
      nfipPayout as (
@@ -74,7 +103,7 @@ with disaster_declarations_summary as (
                        on date_of_loss BETWEEN incident_begin_date AND incident_end_date
                            and dd.incident_type IN ('Flood', 'Hurricane', 'Severe Storm(s)', 'Coastal Storm', 'Tornado', 'Dam/Levee Break', 'Typhoon')
                            and county_code = fips_state_code || fips_county_code
-                           AND county_code = '36001'
+                           AND county_code = '12087'
          group by 1, 2, 3),
 
      disasters as (SELECT
@@ -86,7 +115,7 @@ with disaster_declarations_summary as (
                        EXTRACT(MONTH FROM MIN(incident_begin_date) ) begin_month,
                        EXTRACT(MONTH FROM MAX(incident_end_date)) end_month
                    FROM open_fema_data.disaster_declarations_summaries_v2
-                   WHERE fips_state_code || fips_county_code = '36001'
+                   WHERE fips_state_code || fips_county_code = '12087'
                    GROUP BY 1, 2, 3
                    ORDER BY 1 DESC),
      crop_loss as (SELECT
@@ -128,7 +157,7 @@ with disaster_declarations_summary as (
                                                 'Excess Moisture/Precipitation/Rain','Flood','Poor Drainage','Hail','Storm Surge','Hurricane/Tropical Depression','Tidal Wave/Tsunami','Tornado','Other (Snow,Lightning,etc)','Other (Snow,Lightning,etc)','Other (Snow, Lightning, Etc.)','Other (Volcano,Snow,Lightning,etc)','Other (Volcano,Snow,Lightning,etc)','Freeze','Cold Winter','Cold Wet Weather','Frost','Ice Flow','Ice Floe','Cyclone','Earthquake','Volcanic Eruption','Force Fire','House burn (Pole burn)','Fire','Pit Burn','House Burn (Pole Burn)','Drought','Drought Deviation'
                        )
                      AND month_of_loss != ''
-                     AND state_fips || county_fips = '36001'
+                     AND state_fips || county_fips = '12087'
      ),
      mapping as (
          SELECT disaster_number::text, geoid,
@@ -152,7 +181,7 @@ with disaster_declarations_summary as (
              FROM severe_weather_new.details sw
                       join disaster_number_to_event_id_mapping_without_hazard_type dn_eid
                            on sw.event_id = dn_eid.event_id
-             Where substring(geoid, 1, 5) = '36001'
+             Where substring(geoid, 1, 5) = '12087'
              group by 1, 2
              order by 1, 2),
      disaster_summaries_merge_without_hazard_type_2 as (
@@ -205,7 +234,7 @@ with disaster_declarations_summary as (
      details_fema_per_basis as (
          SELECT generate_series(begin_date_time::date, end_date_time::date, '1 day'::interval)::date event_day_date,
                 (select array_length(array_agg(i), 1) from generate_series(begin_date_time::date, end_date_time::date, '1 day'::interval) i) total_days,
-                episode_id, details.event_id, event_type, details.year, details.geoid,
+                episode_id, details.event_id, details.event_type, details.year, details.geoid,
 
                 property_damage::double precision/(select array_length(array_agg(i), 1) from
                     generate_series(begin_date_time::date,
@@ -230,7 +259,8 @@ with disaster_declarations_summary as (
                 total_loss/(select array_length(array_agg(i), 1) from
                     generate_series(begin_date_time::date,
                                     end_date_time::date, '1 day'::interval) i) fema_property_damage,
-                ((injuries_direct + injuries_indirect + deaths_direct + deaths_indirect)/10)*7600000 fatalities_dollar_value
+                ((injuries_direct + injuries_indirect + deaths_direct + deaths_indirect)/10)*7600000 fatalities_dollar_value,
+                cat_mapping.nri_category
          FROM severe_weather_new.details
                   LEFT JOIN (
              SELECT m.event_id, sum(s.total_loss) total_loss
@@ -240,15 +270,15 @@ with disaster_declarations_summary as (
              group by m.event_id
          ) mapping
                             ON mapping.event_id = details.event_id
-         WHERE geoid = '36001'
+                  LEFT JOIN (SELECT distinct event_type, nri_category
+                             FROM severe_weather_new.details_fema_per_day_basis) cat_mapping
+                            ON cat_mapping.event_type = details.event_type
+         WHERE geoid = '12087'
      )
 
-INSERT INTO tmp_details_fema_per_basis
-SELECT * from details_fema_per_basis;
+-- INSERT INTO tmp_details_fema_per_basis
+-- SELECT hazard, sum(total_loss) from disaster_summaries_merge_without_hazard_type_2 group by 1;
+
+SELECT nri_category, sum(fema_property_damage) FROM details_fema_per_basis group by 1;
 
 
-UPDATE public.tmp_details_fema_per_basis dst
-SET nri_category = src.nri_category
-FROM (SELECT distinct event_type, nri_category
-      FROM severe_weather_new.details_fema_per_day_basis)src
-WHERE src.event_type = dst.event_type;
