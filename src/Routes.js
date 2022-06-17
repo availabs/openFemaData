@@ -9,6 +9,7 @@ import MapView from 'pages/Home/components/merge/mapView'
 import ChartByDisView from 'pages/Home/components/merge/chartByDisView'
 import FemaDisaster from 'pages/Home/disaster'
 import Fusion from 'pages/Home/components/fusion/fusion'
+import TmpMap from 'pages/Home/components/tmpMap/fusionMapView'
 import PerBasisCharts from "./pages/Home/components/perBasisCharts";
 import PerBasisMapView from "./pages/Home/components/perBasisCharts/mapView";
 import PerBasisCompare from "./pages/Home/components/perBasisCharts/compare";
@@ -39,7 +40,7 @@ export default [
 	PerBasisMapView,
 	PerBasisCompare,
 	Auth,
-
+	TmpMap,
 	// -- Misc
 	NoMatch
 ];

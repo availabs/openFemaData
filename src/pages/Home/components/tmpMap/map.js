@@ -1,12 +1,12 @@
 import React from 'react'
 import {AvlMap} from '@availabs/avl-map'
 import {MAPBOX_TOKEN} from "mapboxConfig";
-import {HLRChoroplethFactory} from "components/layers/HLRChoropleth";
-import {PASummaryByGeoidChoroplethFactory} from "../../../../components/layers/PASummaryByGeoidChoropleth";
+import {FusionDataFactory} from "components/layers/tmpMap";
 
 export const RenderMap = (data) => {
     const Layers = React.useRef([
-        HLRChoroplethFactory()
+        // MergeDataFactory(),
+        FusionDataFactory()
     ]);
 
     return (
