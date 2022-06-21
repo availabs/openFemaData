@@ -1337,7 +1337,8 @@ const Fetch = (falcor) => {
         function fetchData() {
             falcor.get(
                 ['nri', 'totals', 'detailed', 'all'],
-                ['per_basis', 'totals'],
+                ['per_basis', 'hlr'],
+                ['nri', 'exposure']
                 // ['per_basis', 'totals', 'byGeoid'],
                 )
         }
@@ -1350,8 +1351,8 @@ const Process = (falcorCache) => {
     return React.useMemo(() => {
         return {
             nri: get(falcorCache, ['nri', 'totals', 'detailed', 'all', 'value', 0]),
-            per_basis: get(falcorCache, ['per_basis', 'totals', 'value']),
-            // per_basis_geoids: get(falcorCache, ['per_basis', 'totals', 'byGeoid', 'value']),
+            per_basis_hlr: get(falcorCache, ['per_basis', 'hlr', 'value']),
+            nri_exposure: get(falcorCache, ['nri', 'exposure', 'value']),
         }
     }, [falcorCache])
 }
@@ -1359,7 +1360,7 @@ const Process = (falcorCache) => {
 const ProcessDataForChart = (data, falcorCache) => {
     return React.useMemo(() => {
         console.log('data', data)
-        if (!data.nri || !data.per_basis) return {};
+        if (!data.nri || !data.per_basis_hlr) return {};
         console.log('comes here')
         return {
             nri: hazards.map(h => ({
@@ -1368,16 +1369,28 @@ const ProcessDataForChart = (data, falcorCache) => {
                 crop: data.nri[h + '_crop'],
                 population: data.nri[h + '_population']
             })),
-            per_basis: hazards.map(h => ({
-                hazard: h,
-                buildings: +get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'swd_property_damage'], 0),
-                crop: +get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'swd_crop_damage'], 0),
-                population: +get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'population_damage'], 0),
-                fema_buildings: +get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'fema_property_damage'], 0),
-                fema_crop: +get(data.per_basis.filter(pb => pb.nri_category === h), [0, 'fema_crop_damage'], 0)
-            }))
+            per_basis: hazards.map(h => {
+                return data.per_basis_hlr.filter(d => d.nri_category === h)
+                                            .reduce((acc, curr) => {
+                                                let tmpNRIExposure = data.nri_exposure.find(ne => ne.nri_category === h && ne.geoid === curr.geoid);
+                                                acc.buildings += +get(curr, ['hlr_b'], 0) * tmpNRIExposure.expb;
+                                                acc.crop += +get(curr, ['hlr_c'], 0) * tmpNRIExposure.expa;
+                                                acc.population += +get(curr, ['hlr_p'], 0) * tmpNRIExposure.expp;
+                                                acc.fema_buildings += +get(curr, ['hlr_f'], 0) * tmpNRIExposure.expb;
+                                                acc.fema_crop += +get(curr, ['hlr_fc'], 0) * tmpNRIExposure.expa;
+
+                                                return acc;
+                                            }, {
+                                                hazard: h,
+                                                buildings: 0,
+                                                crop: 0,
+                                                population: 0,
+                                                fema_buildings: 0,
+                                                fema_crop: 0
+                                            })
+            })
         }
-    }, [data, falcorCache])
+    }, [data])
 }
 
 const HoverComp = ({data, keys, indexFormat, keyFormat, valueFormat}) => {
