@@ -1373,11 +1373,11 @@ const ProcessDataForChart = (data, falcorCache) => {
                 return data.per_basis_hlr.filter(d => d.nri_category === h)
                                             .reduce((acc, curr) => {
                                                 let tmpNRIExposure = data.nri_exposure.find(ne => ne.nri_category === h && ne.geoid === curr.geoid);
-                                                acc.buildings += +get(curr, ['hlr_b'], 0) * tmpNRIExposure.expb;
-                                                acc.crop += +get(curr, ['hlr_c'], 0) * tmpNRIExposure.expa;
-                                                acc.population += +get(curr, ['hlr_p'], 0) * tmpNRIExposure.expp;
-                                                acc.fema_buildings += +get(curr, ['hlr_f'], 0) * tmpNRIExposure.expb;
-                                                acc.fema_crop += +get(curr, ['hlr_fc'], 0) * tmpNRIExposure.expa;
+                                                acc.buildings += +get(curr, ['hlr_b'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq;
+                                                acc.crop += +get(curr, ['hlr_c'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq;
+                                                acc.population += +get(curr, ['hlr_p'], 0) * tmpNRIExposure.expp * tmpNRIExposure.afreq;
+                                                acc.fema_buildings += +get(curr, ['hlr_f'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq;
+                                                acc.fema_crop += +get(curr, ['hlr_fc'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq;
 
                                                 return acc;
                                             }, {
@@ -1490,7 +1490,9 @@ const Compare = (props) => {
                 {RenderTabs(view, setView)}
 
                 {renderChart(chartData.nri, 'hazard', null, ['buildings', 'population', 'crop'], 'NRI')}
-                {renderChart(chartData.per_basis, 'hazard', null, ['buildings', 'population', 'crop'], 'SWD Buildings')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['buildings'
+                    // , 'population', 'crop'
+                ], 'SWD Buildings')}
                 {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings', 'fema_crop'], 'FEMA Buildings')}
             </div>
         </AdminLayout>
