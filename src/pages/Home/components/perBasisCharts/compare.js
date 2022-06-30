@@ -6,11 +6,13 @@ import {BarGraph} from "../../../../components/avl-graph/src";
 import {fnum} from "../../../../utils/fnum";
 import {RenderTabs} from "./Tabs";
 
-const hazards = [
-    'avalanche', 'coastal', 'coldwave', 'drought', 'earthquake', 'hail', 'heatwave', 'hurricane',
-    'icestorm', 'landslide', 'lightning', 'riverine', 'wind', 'tornado', 'tsunami', 'volcano',
-    'wildfire', 'winterweat'
-]
+const hazards =
+    {
+        'avalanche': 'avln', 'coastal': 'cfld', 'coldwave': 'cwav', 'drought': 'drgt', 'earthquake': 'erqk', 'hail': 'hail', 'heatwave': 'hwav', 'hurricane': 'hrcn',
+        'icestorm': 'istm', 'landslide': 'lnds', 'lightning': 'ltng', 'riverine': 'rfld', 'wind': 'swnd', 'tornado': 'trnd', 'tsunami': 'tsun', 'volcano': 'vlcn',
+        'wildfire': 'wfir', 'winterweat': 'wntw'
+    }
+
 const regions = {
     w: [
         '48215',
@@ -1336,10 +1338,9 @@ const Fetch = (falcor) => {
     React.useEffect(() => {
         function fetchData() {
             falcor.get(
-                ['nri', 'totals', 'detailed', 'all'],
+                ['nri', 'hlr'],
                 ['per_basis', 'hlr'],
                 ['nri', 'exposure']
-                // ['per_basis', 'totals', 'byGeoid'],
                 )
         }
 
@@ -1349,35 +1350,73 @@ const Fetch = (falcor) => {
 
 const Process = (falcorCache) => {
     return React.useMemo(() => {
+        console.log('fc', falcorCache)
         return {
-            nri: get(falcorCache, ['nri', 'totals', 'detailed', 'all', 'value', 0]),
+            // nri: get(falcorCache, ['nri', 'totals', 'detailed', 'all', 'value', 0]),
+            nri: get(falcorCache, ['nri', 'hlr', 'value']),
             per_basis_hlr: get(falcorCache, ['per_basis', 'hlr', 'value']),
             nri_exposure: get(falcorCache, ['nri', 'exposure', 'value']),
         }
     }, [falcorCache])
 }
+const perBasisFreq = {
+    'coastal':17.8095238095238,
+    'hail':12.1363636363636,
+    'hurricane':98.1428571428571,
+    'landslide':0.5,
+    'lightning':1.21428571428571,
+    'tornado':209.739130434783,
+    'volcano':65,
+    'wildfire':13.6190476190476,
+    'wind':11.2272727272727,
+    'winterweat':12748.24,
+    'icestorm':833.52,
+    'riverine':12519.04,
+    'heatwave':5178.24,
+    'drought':54637.84,
+    'coldwave':3578.48
 
+}
 const ProcessDataForChart = (data, falcorCache) => {
     return React.useMemo(() => {
         console.log('data', data)
         if (!data.nri || !data.per_basis_hlr) return {};
         console.log('comes here')
         return {
-            nri: hazards.map(h => ({
-                hazard: h,
-                buildings: data.nri[h + '_buildings'],
-                crop: data.nri[h + '_crop'],
-                population: data.nri[h + '_population']
-            })),
-            per_basis: hazards.map(h => {
+            nri: Object.keys(hazards).map(h => {
+                return data.nri.filter(d => d.nri_category === h)
+                                        .reduce((acc, curr) => {
+                                            let tmpNRIExposure = data.nri_exposure.find(ne => ne.nri_category === h && ne.geoid === curr.geoid);
+
+                                            if(tmpNRIExposure || true){
+                                                acc.buildings += +(get(curr, ['hlrb'], 0)
+                                                    * tmpNRIExposure.expb * tmpNRIExposure.afreq
+                                                ) || 0;
+                                                acc.crop += +(get(curr, ['hlra'], 0)
+                                                    * tmpNRIExposure.expa * tmpNRIExposure.afreq
+                                                ) || 0;
+                                                acc.population += +(get(curr, ['hlrp'], 0)
+                                                    * tmpNRIExposure.exppe * tmpNRIExposure.afreq
+                                                ) || 0;
+                                            }
+
+                                            return acc;
+                                        }, {
+                                            hazard: h,
+                                            buildings: 0,
+                                            crop: 0,
+                                            population: 0
+                                        })
+            }),
+            per_basis: Object.keys(hazards).map(h => {
                 return data.per_basis_hlr.filter(d => d.nri_category === h)
                                             .reduce((acc, curr) => {
                                                 let tmpNRIExposure = data.nri_exposure.find(ne => ne.nri_category === h && ne.geoid === curr.geoid);
-                                                acc.buildings += +get(curr, ['hlr_b'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq;
-                                                acc.crop += +get(curr, ['hlr_c'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq;
-                                                acc.population += +get(curr, ['hlr_p'], 0) * tmpNRIExposure.expp * tmpNRIExposure.afreq;
-                                                acc.fema_buildings += +get(curr, ['hlr_f'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq;
-                                                acc.fema_crop += +get(curr, ['hlr_fc'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq;
+                                                acc.buildings += (+get(curr, ['hlr_b'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq) || 0;
+                                                acc.crop += (+get(curr, ['hlr_c'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq) || 0;
+                                                acc.population += (+get(curr, ['hlr_p'], 0) * tmpNRIExposure.exppe * tmpNRIExposure.afreq) || 0;
+                                                acc.fema_buildings += (+get(curr, ['hlr_f'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq) || 0;
+                                                acc.fema_crop += (+get(curr, ['hlr_fc'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq) || 0;
 
                                                 return acc;
                                             }, {
@@ -1490,10 +1529,9 @@ const Compare = (props) => {
                 {RenderTabs(view, setView)}
 
                 {renderChart(chartData.nri, 'hazard', null, ['buildings', 'population', 'crop'], 'NRI')}
-                {renderChart(chartData.per_basis, 'hazard', null, ['buildings'
-                    // , 'population', 'crop'
-                ], 'SWD Buildings')}
-                {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings', 'fema_crop'], 'FEMA Buildings')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['buildings', 'population', 'crop'
+                ], 'SWD')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings', 'fema_crop', 'fema_population'], 'FEMA')}
             </div>
         </AdminLayout>
     )
