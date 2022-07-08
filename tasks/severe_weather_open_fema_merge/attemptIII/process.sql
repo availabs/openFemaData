@@ -261,7 +261,7 @@ with disaster_declarations_summary as (
                                         CASE WHEN nri_category = 'drought' THEN end_date_time::date + INTERVAL '365 days' ELSE end_date_time::date + INTERVAL '31 days' END
                                     ), '1 day'::interval)::date event_day_date,
                 cat_mapping.nri_category,
-                details.geoid,
+                substring(details.geoid, 1, 5) geoid,
                 sum(property_damage::double precision/LEAST(
                         (select array_length(array_agg(i), 1) from generate_series(begin_date_time::date,
                                                                                    end_date_time::date, '1 day'::interval) i),
@@ -334,7 +334,7 @@ with disaster_declarations_summary as (
            AND geoid is not null
 --            AND coalesce(property_damage, 0) + coalesce(crop_damage, 0) > 0
          group by 1, 2, 3
-         order by event_day_date, geoid, nri_category
+         order by 1, 2, 3
      )
 
 INSERT INTO tmp_details_fema_per_basis
