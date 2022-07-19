@@ -22,8 +22,6 @@ with
                        THEN 'winterweat'
                    WHEN lower(dd.incident_type) = 'earthquake'
                        THEN 'earthquake'
-                   WHEN lower(dd.incident_type) = 'severe storm(s)'
-                       THEN 'riverine'
                    WHEN lower(dd.incident_type) = 'tornado'
                        THEN 'tornado'
                    WHEN lower(dd.incident_type) = 'tsunami'
@@ -49,22 +47,24 @@ with
                           AND (
                                      incident_type = event_type_formatted OR
                                      (incident_type = 'hurricane' AND event_type_formatted = 'riverine') OR
-                                     (incident_type = 'riverine' AND event_type_formatted = 'tornado') OR
-                                     (incident_type = 'riverine' AND event_type_formatted = 'coastal') OR
+                                 --                                      (incident_type = 'riverine' AND event_type_formatted = 'tornado') OR
+--                                      (incident_type = 'riverine' AND event_type_formatted = 'coastal') OR
                                      (incident_type = 'icestorm' AND event_type_formatted = 'coldwave') OR
                                      (incident_type = 'icestorm' AND event_type_formatted = 'hail') OR
                                      (incident_type = 'winterweat' AND event_type_formatted = 'coldwave') OR
                                      (incident_type = 'winterweat' AND event_type_formatted = 'icestorm') OR
-                                     (incident_type = 'coastal' AND event_type_formatted = 'hurricane') OR
-                                     (incident_type = 'coastal' AND event_type_formatted = 'tornado') OR
+                                 --                                      (incident_type = 'coastal' AND event_type_formatted = 'hurricane') OR
+--                                      (incident_type = 'coastal' AND event_type_formatted = 'tornado') OR
                                      (incident_type = 'earthquake' AND event_type_formatted = 'landslide') OR
                                      (incident_type = 'tornado' AND event_type_formatted = 'coastal') OR
                                      (incident_type = 'tornado' AND event_type_formatted = 'Heavy Rain') OR
-                                     (incident_type = 'tornado' AND event_type_formatted = 'lightning') OR
+--                                      (incident_type = 'tornado' AND event_type_formatted = 'lightning') OR
                                      (incident_type = 'tornado' AND event_type_formatted = 'wind') OR
-                                     (incident_type = 'tornado' AND event_type_formatted = 'hail')
+                                     (incident_type = 'tornado' AND event_type_formatted = 'hail') OR
+                                     (incident_type = 'icestorm' AND event_type_formatted = 'winterweat')
                              )
-        WHERE year >= 2000
+        WHERE year >= 1986 and year <= 2017
+          AND ((year <= 2010 and magnitude >= 0.75) OR (year >= 2010 and magnitude >= 1))
         ORDER BY disaster_number
     ),
     disaster_division_factor as (
@@ -249,15 +249,16 @@ with
                      LEFT JOIN open_fema_data.disaster_declarations_summaries_v2 dd
                                on dd.disaster_number = dn_eid.disaster_number
                                    AND substring(geoid, 1, 5) = fips_state_code || fips_county_code
-            WHERE year >= 2000
+            WHERE year >= 1986 and year <= 2017
+			AND ((year <= 2010 and magnitude >= 0.75) OR (year >= 2010 and magnitude >= 1))
               AND substring(geoid, 1, 5) not like '*'
             group by 1, 2, 3, 4
             order by 1, 2),
     disaster_summaries_merge_without_hazard_type_2 as (
         select
             coalesce(ofd.geoid, swd.geoid) geoid,
-            ofd.disaster_number, swd.episode_id,
-            STRING_AGG(distinct event_id::text, ',') event_id,
+            ofd.disaster_number, swd.episode_id, event_id,
+--             STRING_AGG(distinct event_id::text, ',') event_id,
 
             CASE
                 WHEN event_type IN ('High Wind','Strong Wind','Marine High Wind','Marine Strong Wind','Marine Thunderstorm Wind','Thunderstorm Wind','THUNDERSTORM WINDS LIGHTNING','TORNADOES, TSTM WIND, HAIL','THUNDERSTORM WIND/ TREES','THUNDERSTORM WINDS HEAVY RAIN','Heavy Wind','THUNDERSTORM WINDS/FLASH FLOOD','THUNDERSTORM WINDS/ FLOOD','THUNDERSTORM WINDS/HEAVY RAIN','THUNDERSTORM WIND/ TREE','THUNDERSTORM WINDS FUNNEL CLOU','THUNDERSTORM WINDS/FLOODING')
@@ -268,7 +269,7 @@ with
                     THEN 'tsunami'
                 WHEN event_type IN ('Tornado','TORNADOES, TSTM WIND, HAIL','TORNADO/WATERSPOUT','Funnel Cloud','Waterspout')
                     THEN 'tornado'
-                WHEN event_type IN ('Flood','Flash Flood','THUNDERSTORM WINDS/FLASH FLOOD','THUNDERSTORM WINDS/ FLOOD','Coastal Flood','Lakeshore Flood')
+                WHEN event_type IN ('Flood','Flash Flood','THUNDERSTORM WINDS/FLASH FLOOD','THUNDERSTORM WINDS/ FLOOD','Lakeshore Flood')
                     THEN 'riverine'
                 WHEN event_type IN ('Lightning','Marine Lightning')
                     THEN 'lightning'
@@ -292,7 +293,7 @@ with
                     THEN 'winterweat'
                 WHEN event_type IN ('Volcanic Ash','Volcanic Ashfall')
                     THEN 'volcano'
-                WHEN event_type IN ('High Surf','Sneakerwave','Storm Surge/Tide','Rip Current')
+                WHEN event_type IN ('Coastal Flood', 'High Surf','Sneakerwave','Storm Surge/Tide','Rip Current')
                     THEN 'coastal'
                 END
                 event_type,
@@ -361,78 +362,78 @@ with
                  full outer join swd
                                  ON ofd.disaster_number = swd.disaster_number
                                      and ofd.geoid = swd.geoid
-        GROUP BY 1, 2, 3, 5
+        GROUP BY 1, 2, 3, 4, 5
     ),
-    details_fema_per_basis as (
-        SELECT
-            generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                            LEAST(
-                                    coalesce(fema_incident_end_date, swd_end_date)::date,
-                                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN coalesce(fema_incident_begin_date, swd_begin_date)::date + INTERVAL '365 days' ELSE coalesce(fema_incident_begin_date, swd_begin_date)::date + INTERVAL '31 days' END
-                                ), '1 day'::interval)::date event_day_date,
-            coalesce(event_type, hazard) hazard,
-            geoid,
-            sum(swd_property_damage::double precision/LEAST(
-                    (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                               coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) swd_property_damage,
-
-            sum(swd_crop_damage::double precision/LEAST(
-                    (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                               coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) swd_crop_damage,
-
-            sum(injuries_direct::double precision/LEAST(
-                    (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                               coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) injuries_direct,
-            sum(injuries_indirect::double precision/LEAST(
-                    (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                               coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) injuries_indirect,
-            sum(deaths_direct::double precision/LEAST(
-                    (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                               coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) deaths_direct,
-            sum(deaths_indirect::double precision /LEAST(
-                    (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                               coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) deaths_inderect,
-            sum(fema_property_damage/LEAST(
-                    (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                               coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) fema_property_damage,
-            sum(fema_crop_damage/LEAST(
-                    (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                               coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                    CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) fema_crop_damage,
-            sum(((
-                             injuries_direct / LEAST(
-                                 (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                                            coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                                 CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END) +
-                             injuries_indirect / LEAST(
-                                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END) +
-                             deaths_direct / LEAST(
-                                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END) +
-                             deaths_indirect / LEAST(
-                                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
-                                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
-                                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)
-                     )/10)*7600000) fatalities_dollar_value
-        FROM disaster_summaries_merge_without_hazard_type_2
-        WHERE coalesce(hazard, event_type) in ('coldwave', 'drought', 'heatwave', 'icestorm', 'riverine', 'winterweat')
-          AND geoid is not null
-        group by 1, 2, 3
-        order by 1, 2, 3
-    ),
+--     details_fema_per_basis as (
+--         SELECT
+--             generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                             LEAST(
+--                                     coalesce(fema_incident_end_date, swd_end_date)::date,
+--                                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN coalesce(swd_begin_date, fema_incident_begin_date)::date + INTERVAL '365 days' ELSE coalesce(swd_begin_date, fema_incident_begin_date)::date + INTERVAL '31 days' END
+--                                 ), '1 day'::interval)::date event_day_date,
+--             coalesce(event_type, hazard) hazard,
+--             geoid,
+--             sum(swd_property_damage::double precision/LEAST(
+--                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) swd_property_damage,
+--
+--             sum(swd_crop_damage::double precision/LEAST(
+--                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) swd_crop_damage,
+--
+--             sum(injuries_direct::double precision/LEAST(
+--                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) injuries_direct,
+--             sum(injuries_indirect::double precision/LEAST(
+--                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) injuries_indirect,
+--             sum(deaths_direct::double precision/LEAST(
+--                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) deaths_direct,
+--             sum(deaths_indirect::double precision /LEAST(
+--                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) deaths_inderect,
+--             sum(fema_property_damage/LEAST(
+--                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) fema_property_damage,
+--             sum(fema_crop_damage/LEAST(
+--                     (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                     CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)) fema_crop_damage,
+--             sum(((
+--                              injuries_direct / LEAST(
+--                                  (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                             coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                                  CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END) +
+--                              injuries_indirect / LEAST(
+--                                      (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                                 coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                                      CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END) +
+--                              deaths_direct / LEAST(
+--                                      (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                                 coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                                      CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END) +
+--                              deaths_indirect / LEAST(
+--                                      (select array_length(array_agg(i), 1) from generate_series(coalesce(fema_incident_begin_date, swd_begin_date)::date,
+--                                                                                                 coalesce(fema_incident_end_date, swd_end_date)::date, '1 day'::interval) i),
+--                                      CASE WHEN coalesce(hazard, event_type) = 'drought' THEN 365 ELSE 31 END)
+--                      )/10)*7600000) fatalities_dollar_value
+--         FROM disaster_summaries_merge_without_hazard_type_2
+--         WHERE coalesce(hazard, event_type) in ('coldwave', 'drought', 'heatwave', 'icestorm', 'riverine', 'winterweat')
+--           AND geoid is not null
+--         group by 1, 2, 3
+--         order by 1, 2, 3
+--     ),
     aggregation as (
         SELECT
-            -- 		coalesce(fema_incident_begin_date, swd_begin_date) begin_date,
+            		coalesce(swd_begin_date, fema_incident_begin_date) begin_date,
             -- 		coalesce(fema_incident_end_date, swd_end_date) end_date,
             coalesce(event_type, hazard) hazard,
             geoid,
@@ -452,17 +453,22 @@ with
                             )/10 ) * 7600000) fatalities_dollar_value
         from disaster_summaries_merge_without_hazard_type_2
         where coalesce(event_type, hazard) NOT IN ('coldwave', 'drought', 'heatwave', 'icestorm', 'riverine', 'winterweat')
-        group by disaster_number, geoid, 1
+        group by 1, event_id, geoid, 1
     ),
     tmp_calculations as (
 
-        select 'agg' src, hazard nri_category, geoid, swd_property_damage, swd_crop_damage, fema_property_damage, fema_crop_damage, fatalities_dollar_value
+        select 'agg' src, hazard nri_category, geoid,
+               swd_property_damage, swd_crop_damage, fema_property_damage, fema_crop_damage, fatalities_dollar_value,
+               coalesce(fema_property_damage, swd_property_damage) merged_property_damage,
+               coalesce(fema_crop_damage, swd_crop_damage)         merged_crop_damage
         from aggregation
 
-        UNION
-
-        select 'pb' src, hazard nri_category, geoid, swd_property_damage, swd_crop_damage, fema_property_damage, fema_crop_damage, fatalities_dollar_value
-        from details_fema_per_basis
+--         UNION
+--
+--         select 'pb' src, hazard nri_category, geoid, swd_property_damage, swd_crop_damage, fema_property_damage, fema_crop_damage, fatalities_dollar_value,
+--                coalesce(fema_property_damage, swd_property_damage) merged_property_damage,
+--                coalesce(fema_crop_damage, swd_crop_damage)         merged_crop_damage
+--         from details_fema_per_basis
 
         order by 1, 2, 3
     ),
@@ -536,6 +542,42 @@ with
                    WHEN nri_category IN ('coastal')
                        THEN fema_property_damage/ NULLIF (CFLD_EXPB, 0)
                    END fema_building_loss_ratio_per_basis,
+            
+            
+            CASE
+                   WHEN nri_category IN ('wind')
+                       THEN merged_property_damage/ NULLIF (SWND_EXPB, 0)
+                   WHEN nri_category IN ('wildfire')
+                       THEN merged_property_damage/ NULLIF (WFIR_EXPB, 0)
+                   WHEN nri_category IN ('tsunami')
+                       THEN merged_property_damage/ NULLIF (TSUN_EXPB, 0)
+                   WHEN nri_category IN ('tornado')
+                       THEN merged_property_damage/ NULLIF (TRND_EXPB, 0)
+                   WHEN nri_category IN ('riverine')
+                       THEN merged_property_damage/ NULLIF (RFLD_EXPB, 0)
+                   WHEN nri_category IN ('lightning')
+                       THEN merged_property_damage/ NULLIF (LTNG_EXPB, 0)
+                   WHEN nri_category IN ('landslide')
+                       THEN merged_property_damage/ NULLIF (LNDS_EXPB, 0)
+                   WHEN nri_category IN ('icestorm')
+                       THEN merged_property_damage/ NULLIF (ISTM_EXPB, 0)
+                   WHEN nri_category IN ('hurricane')
+                       THEN merged_property_damage/ NULLIF (HRCN_EXPB, 0)
+                   WHEN nri_category IN ('heatwave')
+                       THEN merged_property_damage/ NULLIF (HWAV_EXPB, 0)
+                   WHEN nri_category IN ('hail')
+                       THEN merged_property_damage/ NULLIF (HAIL_EXPB, 0)
+                   WHEN nri_category IN ('avalanche')
+                       THEN merged_property_damage/ NULLIF (AVLN_EXPB, 0)
+                   WHEN nri_category IN ('coldwave')
+                       THEN merged_property_damage/ NULLIF (CWAV_EXPB, 0)
+                   WHEN nri_category IN ('winterweat')
+                       THEN merged_property_damage/ NULLIF (WNTW_EXPB, 0)
+                   WHEN nri_category IN ('volcano')
+                       THEN merged_property_damage/ NULLIF (VLCN_EXPB, 0)
+                   WHEN nri_category IN ('coastal')
+                       THEN merged_property_damage/ NULLIF (CFLD_EXPB, 0)
+                   END merged_building_loss_ratio_per_basis,
 
                CASE
                    WHEN nri_category IN ('wind')
@@ -582,6 +624,31 @@ with
                    WHEN nri_category IN ('winterweat')
                        THEN swd_crop_damage/ NULLIF (WNTW_EXPA, 0)
                    END crop_loss_ratio_per_basis,
+            
+            
+            CASE
+                   WHEN nri_category IN ('wind')
+                       THEN merged_crop_damage/ NULLIF (SWND_EXPA, 0)
+                   WHEN nri_category IN ('wildfire')
+                       THEN merged_crop_damage/ NULLIF (WFIR_EXPA, 0)
+                   WHEN nri_category IN ('tornado')
+                       THEN merged_crop_damage/ NULLIF (TRND_EXPA, 0)
+                   WHEN nri_category IN ('riverine')
+                       THEN merged_crop_damage/ NULLIF (RFLD_EXPA, 0)
+                   WHEN nri_category IN ('hurricane')
+                       THEN merged_crop_damage/ NULLIF (HRCN_EXPA, 0)
+                   WHEN nri_category IN ('heatwave')
+                       THEN merged_crop_damage/ NULLIF (HWAV_EXPA, 0)
+                   WHEN nri_category IN ('hail')
+                       THEN merged_crop_damage/ NULLIF (HAIL_EXPA, 0)
+                   WHEN nri_category IN ('drought')
+                       THEN merged_crop_damage/ NULLIF (DRGT_EXPA, 0)
+                   WHEN nri_category IN ('coldwave')
+                       THEN merged_crop_damage/ NULLIF (CWAV_EXPA, 0)
+                   WHEN nri_category IN ('winterweat')
+                       THEN merged_crop_damage/ NULLIF (WNTW_EXPA, 0)
+                   END merged_crop_loss_ratio_per_basis,
+            
                CASE
                    WHEN nri_category IN ('wind')
                        THEN fatalities_dollar_value/ NULLIF (SWND_EXPPE, 0)
@@ -624,11 +691,15 @@ with
                count (1),
                avg (Least(COALESCE (building_loss_ratio_per_basis, 0), 1)) b_av_n,
                avg (Least(COALESCE (crop_loss_ratio_per_basis, 0), 1)) c_av_n,
+               avg (Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_av_n,
+               avg (Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_av_n,
                avg (Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_av_n,
                avg (Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_av_n,
                avg (Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_av_n,
                variance(Least(COALESCE (building_loss_ratio_per_basis, 0), 1)) b_va_n,
                variance(Least(COALESCE (crop_loss_ratio_per_basis, 0), 1)) c_va_n,
+               variance(Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_va_n,
+               variance(Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_va_n,
                variance(Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_va_n,
                variance(Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_va_n,
                variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_n
@@ -646,11 +717,15 @@ with
                avg (Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_av_r,
                avg (Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_av_r,
                avg (Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_av_r,
+               avg (Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_av_r,
+               avg (Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_av_r,
                variance(Least(COALESCE (building_loss_ratio_per_basis, 0), 1)) b_va_r,
                variance(Least(COALESCE (crop_loss_ratio_per_basis, 0), 1)) c_va_r,
                variance(Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_va_r,
                variance(Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_va_r,
-               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_r
+               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_r,
+               variance(Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_va_r,
+               variance(Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_va_r
 
         from lrpbs as a
                  join severe_weather_new.fips_to_regions_and_surrounding_counties as b
@@ -669,11 +744,15 @@ with
                avg (Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_av_r,
                avg (Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_av_r,
                avg (Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_av_r,
+               avg (Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_av_r,
+               avg (Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_av_r,
                variance(Least(COALESCE (building_loss_ratio_per_basis, 0), 1)) b_va_r,
                variance(Least(COALESCE (crop_loss_ratio_per_basis, 0), 1)) c_va_r,
                variance(Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_va_r,
                variance(Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_va_r,
-               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_r
+               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_r,
+                variance(Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_va_r,
+               variance(Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_va_r
 
         from lrpbs as a
                  join severe_weather_new.fips_to_regions_and_surrounding_counties_hurricane as b
@@ -693,11 +772,15 @@ with
                avg (Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_av_c,
                avg (Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_av_c,
                avg (Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_av_c,
+               avg (Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_av_c,
+               avg (Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_av_c,
                variance(Least(COALESCE (building_loss_ratio_per_basis, 0), 1)) b_va_c,
                variance(Least(COALESCE (crop_loss_ratio_per_basis, 0), 1)) c_va_c,
                variance(Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_va_c,
                variance(Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_va_c,
-               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_c
+               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_c,
+               variance(Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_va_c,
+               variance(Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_va_c
 
         from lrpbs as a
                  join severe_weather_new.fips_to_regions_and_surrounding_counties as b
@@ -716,11 +799,15 @@ with
                avg (Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_av_c,
                avg (Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_av_c,
                avg (Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_av_c,
+               avg (Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_av_c,
+               avg (Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_av_c,
                variance(Least(COALESCE (building_loss_ratio_per_basis, 0), 1)) b_va_c,
                variance(Least(COALESCE (crop_loss_ratio_per_basis, 0), 1)) c_va_c,
                variance(Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_va_c,
                variance(Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_va_c,
-               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_c
+               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_c,
+               variance(Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_va_c,
+               variance(Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_va_c
 
         from lrpbs as a
                  join severe_weather_new.fips_to_regions_and_surrounding_counties_hurricane as b
@@ -738,11 +825,15 @@ with
                avg (Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_av_s,
                avg (Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_av_s,
                avg (Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_av_s,
+               avg (Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_av_s,
+               avg (Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_av_s,
                variance(Least(COALESCE (building_loss_ratio_per_basis, 0), 1)) b_va_s,
                variance(Least(COALESCE (crop_loss_ratio_per_basis, 0), 1)) c_va_s,
                variance(Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_va_s,
                variance(Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_va_s,
-               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_s
+               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_s,
+               variance(Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_va_s,
+               variance(Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_va_s
 
         from lrpbs as a
                  join severe_weather_new.fips_to_regions_and_surrounding_counties as b
@@ -762,11 +853,15 @@ with
                avg (Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_av_s,
                avg (Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_av_s,
                avg (Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_av_s,
+               avg (Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_av_s,
+               avg (Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_av_s,
                variance(Least(COALESCE (building_loss_ratio_per_basis, 0), 1)) b_va_s,
                variance(Least(COALESCE (crop_loss_ratio_per_basis, 0), 1)) c_va_s,
                variance(Least(COALESCE (population_loss_ratio_per_basis, 0), 1)) p_va_s,
                variance(Least(COALESCE (fema_building_loss_ratio_per_basis, 0), 1)) f_va_s,
-               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_s
+               variance(Least(COALESCE (fema_crop_loss_ratio_per_basis, 0), 1)) fc_va_s,
+               variance(Least(COALESCE (merged_building_loss_ratio_per_basis, 0), 1)) mb_va_s,
+               variance(Least(COALESCE (merged_crop_loss_ratio_per_basis, 0), 1)) mc_va_s
         from lrpbs as a
                  join severe_weather_new.fips_to_regions_and_surrounding_counties_hurricane as b
                       on b.fips = a.geoid
@@ -945,6 +1040,47 @@ with
                                      )
                              ) *
                          f_av_s), 0) AS hlr_f,
+            
+            COALESCE(((
+                                 (1.0 / NULLIF(mb_va_n, 0)) /
+                                 (
+                                         COALESCE(1.0 / NULLIF(mb_va_n, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_r, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_c, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_s, 0), 0)
+                                     )
+                             ) *
+                         mb_av_n), 0) +
+               COALESCE(((
+                                 (1.0 / NULLIF(mb_va_r, 0)) /
+                                 (
+                                         COALESCE(1.0 / NULLIF(mb_va_n, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_r, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_c, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_s, 0), 0)
+                                     )
+                             ) *
+                         mb_av_r), 0) +
+               COALESCE(((
+                                 (1.0 / NULLIF(mb_va_c, 0)) /
+                                 (
+                                         COALESCE(1.0 / NULLIF(mb_va_n, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_r, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_c, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_s, 0), 0)
+                                     )
+                             ) *
+                         mb_av_c), 0) +
+               COALESCE(((
+                                 (1.0 / NULLIF(mb_va_s, 0)) /
+                                 (
+                                         COALESCE(1.0 / NULLIF(mb_va_n, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_r, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_c, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mb_va_s, 0), 0)
+                                     )
+                             ) *
+                         mb_av_s), 0) AS hlr_mb,
 
                COALESCE(((
                                  (1.0 / NULLIF(fc_va_n, 0)) /
@@ -985,7 +1121,48 @@ with
                                          COALESCE(1.0 / NULLIF(fc_va_s, 0), 0)
                                      )
                              ) *
-                         fc_av_s), 0) AS hlr_fc
+                         fc_av_s), 0) AS hlr_fc,
+            
+            COALESCE(((
+                                 (1.0 / NULLIF(mc_va_n, 0)) /
+                                 (
+                                         COALESCE(1.0 / NULLIF(mc_va_n, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_r, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_c, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_s, 0), 0)
+                                     )
+                             ) *
+                         mc_av_n), 0) +
+               COALESCE(((
+                                 (1.0 / NULLIF(mc_va_r, 0)) /
+                                 (
+                                         COALESCE(1.0 / NULLIF(mc_va_n, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_r, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_c, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_s, 0), 0)
+                                     )
+                             ) *
+                         mc_av_r), 0) +
+               COALESCE(((
+                                 (1.0 / NULLIF(mc_va_c, 0)) /
+                                 (
+                                         COALESCE(1.0 / NULLIF(mc_va_n, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_r, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_c, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_s, 0), 0)
+                                     )
+                             ) *
+                         mc_av_c), 0) +
+               COALESCE(((
+                                 (1.0 / NULLIF(mc_va_s, 0)) /
+                                 (
+                                         COALESCE(1.0 / NULLIF(mc_va_n, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_r, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_c, 0), 0) +
+                                         COALESCE(1.0 / NULLIF(mc_va_s, 0), 0)
+                                     )
+                             ) *
+                         mc_av_s), 0) AS hlr_mc
 
 
         FROM county
@@ -1001,136 +1178,191 @@ with
 
 
 
-SELECT geoid, region, surrounding, nri_category,
-       CASE
-           WHEN nri_category IN ('coastal')
-               THEN hlr_b * CFLD_EXPB  * CFLD_AFREQ
-           WHEN nri_category IN ('coldwave')
-               THEN hlr_b * CWAV_EXPB  * CWAV_AFREQ
-           WHEN nri_category IN ('drought')
-               THEN hlr_b * CWAV_EXPB  * CWAV_AFREQ
-           WHEN nri_category IN ('hurricane')
-               THEN hlr_b * HRCN_EXPB  * HRCN_AFREQ
-           WHEN nri_category IN ('heatwave')
-               THEN hlr_b * HWAV_EXPB  * HWAV_AFREQ
-           WHEN nri_category IN ('hail')
-               THEN hlr_b * HAIL_EXPB  * HAIL_AFREQ
-           WHEN nri_category IN ('tornado')
-               THEN hlr_b * TRND_EXPB  * TRND_AFREQ
-           WHEN nri_category IN ('riverine')
-               THEN hlr_b * RFLD_EXPB  * RFLD_AFREQ
-           WHEN nri_category IN ('lightning')
-               THEN hlr_b * LTNG_EXPB  * LTNG_AFREQ
-           WHEN nri_category IN ('landslide')
-               THEN hlr_b * LNDS_EXPB  * LNDS_AFREQ
-           WHEN nri_category IN ('icestorm')
-               THEN hlr_b * ISTM_EXPB  * ISTM_AFREQ
-           WHEN nri_category IN ('wind')
-               THEN hlr_b * SWND_EXPB  * SWND_AFREQ
-           WHEN nri_category IN ('wildfire')
-               THEN hlr_b * WFIR_EXPB  * WFIR_AFREQ
-           WHEN nri_category IN ('winterweat')
-               THEN hlr_b * WNTW_EXPB  * WNTW_AFREQ
-           WHEN nri_category IN ('tsunami')
-               THEN hlr_b * TSUN_EXPB  * TSUN_AFREQ
-           WHEN nri_category IN ('avalanche')
-               THEN hlr_b * AVLN_EXPB  * AVLN_AFREQ
-           WHEN nri_category IN ('volcano')
-               THEN hlr_b * VLCN_EXPB  * VLCN_AFREQ
-           END swd_building,
+SELECT nri_category,
+       sum(CASE
+               WHEN nri_category IN ('coastal')
+                   THEN hlr_b * CFLD_EXPB  * CFLD_AFREQ
+               WHEN nri_category IN ('coldwave')
+                   THEN hlr_b * CWAV_EXPB  * CWAV_AFREQ
+               WHEN nri_category IN ('drought')
+                   THEN hlr_b * CWAV_EXPB  * CWAV_AFREQ
+               WHEN nri_category IN ('hurricane')
+                   THEN hlr_b * HRCN_EXPB  * HRCN_AFREQ
+               WHEN nri_category IN ('heatwave')
+                   THEN hlr_b * HWAV_EXPB  * HWAV_AFREQ
+               WHEN nri_category IN ('hail')
+                   THEN hlr_b * HAIL_EXPB  * HAIL_AFREQ
+               WHEN nri_category IN ('tornado')
+                   THEN hlr_b * TRND_EXPB  * TRND_AFREQ
+               WHEN nri_category IN ('riverine')
+                   THEN hlr_b * RFLD_EXPB  * RFLD_AFREQ
+               WHEN nri_category IN ('lightning')
+                   THEN hlr_b * LTNG_EXPB  * LTNG_AFREQ
+               WHEN nri_category IN ('landslide')
+                   THEN hlr_b * LNDS_EXPB  * LNDS_AFREQ
+               WHEN nri_category IN ('icestorm')
+                   THEN hlr_b * ISTM_EXPB  * ISTM_AFREQ
+               WHEN nri_category IN ('wind')
+                   THEN hlr_b * SWND_EXPB  * SWND_AFREQ
+               WHEN nri_category IN ('wildfire')
+                   THEN hlr_b * WFIR_EXPB  * WFIR_AFREQ
+               WHEN nri_category IN ('winterweat')
+                   THEN hlr_b * WNTW_EXPB  * WNTW_AFREQ
+               WHEN nri_category IN ('tsunami')
+                   THEN hlr_b * TSUN_EXPB  * TSUN_AFREQ
+               WHEN nri_category IN ('avalanche')
+                   THEN hlr_b * AVLN_EXPB  * AVLN_AFREQ
+               WHEN nri_category IN ('volcano')
+                   THEN hlr_b * VLCN_EXPB  * VLCN_AFREQ
+           END) swd_building,
 
-       CASE
-           WHEN nri_category IN ('coastal')
-               THEN hlr_f * CFLD_EXPB  * CFLD_AFREQ
-           WHEN nri_category IN ('coldwave')
-               THEN hlr_f * CWAV_EXPB  * CWAV_AFREQ
-           WHEN nri_category IN ('drought')
-               THEN hlr_f * CWAV_EXPB  * CWAV_AFREQ
-           WHEN nri_category IN ('hurricane')
-               THEN hlr_f * HRCN_EXPB  * HRCN_AFREQ
-           WHEN nri_category IN ('heatwave')
-               THEN hlr_f * HWAV_EXPB  * HWAV_AFREQ
-           WHEN nri_category IN ('hail')
-               THEN hlr_f * HAIL_EXPB  * HAIL_AFREQ
-           WHEN nri_category IN ('tornado')
-               THEN hlr_f * TRND_EXPB  * TRND_AFREQ
-           WHEN nri_category IN ('riverine')
-               THEN hlr_f * RFLD_EXPB  * RFLD_AFREQ
-           WHEN nri_category IN ('lightning')
-               THEN hlr_f * LTNG_EXPB  * LTNG_AFREQ
-           WHEN nri_category IN ('landslide')
-               THEN hlr_f * LNDS_EXPB  * LNDS_AFREQ
-           WHEN nri_category IN ('icestorm')
-               THEN hlr_f * ISTM_EXPB  * ISTM_AFREQ
-           WHEN nri_category IN ('wind')
-               THEN hlr_f * SWND_EXPB  * SWND_AFREQ
-           WHEN nri_category IN ('wildfire')
-               THEN hlr_f * WFIR_EXPB  * WFIR_AFREQ
-           WHEN nri_category IN ('winterweat')
-               THEN hlr_f * WNTW_EXPB  * WNTW_AFREQ
-           WHEN nri_category IN ('tsunami')
-               THEN hlr_f * TSUN_EXPB  * TSUN_AFREQ
-           WHEN nri_category IN ('avalanche')
-               THEN hlr_f * AVLN_EXPB  * AVLN_AFREQ
-           WHEN nri_category IN ('volcano')
-               THEN hlr_f * VLCN_EXPB  * VLCN_AFREQ
-           END fema_building,
+       sum(CASE
+               WHEN nri_category IN ('coastal')
+                   THEN hlr_f * CFLD_EXPB  * CFLD_AFREQ
+               WHEN nri_category IN ('coldwave')
+                   THEN hlr_f * CWAV_EXPB  * CWAV_AFREQ
+               WHEN nri_category IN ('drought')
+                   THEN hlr_f * CWAV_EXPB  * CWAV_AFREQ
+               WHEN nri_category IN ('hurricane')
+                   THEN hlr_f * HRCN_EXPB  * HRCN_AFREQ
+               WHEN nri_category IN ('heatwave')
+                   THEN hlr_f * HWAV_EXPB  * HWAV_AFREQ
+               WHEN nri_category IN ('hail')
+                   THEN hlr_f * HAIL_EXPB  * HAIL_AFREQ
+               WHEN nri_category IN ('tornado')
+                   THEN hlr_f * TRND_EXPB  * TRND_AFREQ
+               WHEN nri_category IN ('riverine')
+                   THEN hlr_f * RFLD_EXPB  * RFLD_AFREQ
+               WHEN nri_category IN ('lightning')
+                   THEN hlr_f * LTNG_EXPB  * LTNG_AFREQ
+               WHEN nri_category IN ('landslide')
+                   THEN hlr_f * LNDS_EXPB  * LNDS_AFREQ
+               WHEN nri_category IN ('icestorm')
+                   THEN hlr_f * ISTM_EXPB  * ISTM_AFREQ
+               WHEN nri_category IN ('wind')
+                   THEN hlr_f * SWND_EXPB  * SWND_AFREQ
+               WHEN nri_category IN ('wildfire')
+                   THEN hlr_f * WFIR_EXPB  * WFIR_AFREQ
+               WHEN nri_category IN ('winterweat')
+                   THEN hlr_f * WNTW_EXPB  * WNTW_AFREQ
+               WHEN nri_category IN ('tsunami')
+                   THEN hlr_f * TSUN_EXPB  * TSUN_AFREQ
+               WHEN nri_category IN ('avalanche')
+                   THEN hlr_f * AVLN_EXPB  * AVLN_AFREQ
+               WHEN nri_category IN ('volcano')
+                   THEN hlr_f * VLCN_EXPB  * VLCN_AFREQ
+           END) fema_building,
+    
+    sum(CASE
+               WHEN nri_category IN ('coastal')
+                   THEN hlr_mb * CFLD_EXPB  * CFLD_AFREQ
+               WHEN nri_category IN ('coldwave')
+                   THEN hlr_mb * CWAV_EXPB  * CWAV_AFREQ
+               WHEN nri_category IN ('drought')
+                   THEN hlr_mb * CWAV_EXPB  * CWAV_AFREQ
+               WHEN nri_category IN ('hurricane')
+                   THEN hlr_mb * HRCN_EXPB  * HRCN_AFREQ
+               WHEN nri_category IN ('heatwave')
+                   THEN hlr_mb * HWAV_EXPB  * HWAV_AFREQ
+               WHEN nri_category IN ('hail')
+                   THEN hlr_mb * HAIL_EXPB  * HAIL_AFREQ
+               WHEN nri_category IN ('tornado')
+                   THEN hlr_mb * TRND_EXPB  * TRND_AFREQ
+               WHEN nri_category IN ('riverine')
+                   THEN hlr_mb * RFLD_EXPB  * RFLD_AFREQ
+               WHEN nri_category IN ('lightning')
+                   THEN hlr_mb * LTNG_EXPB  * LTNG_AFREQ
+               WHEN nri_category IN ('landslide')
+                   THEN hlr_mb * LNDS_EXPB  * LNDS_AFREQ
+               WHEN nri_category IN ('icestorm')
+                   THEN hlr_mb * ISTM_EXPB  * ISTM_AFREQ
+               WHEN nri_category IN ('wind')
+                   THEN hlr_mb * SWND_EXPB  * SWND_AFREQ
+               WHEN nri_category IN ('wildfire')
+                   THEN hlr_mb * WFIR_EXPB  * WFIR_AFREQ
+               WHEN nri_category IN ('winterweat')
+                   THEN hlr_mb * WNTW_EXPB  * WNTW_AFREQ
+               WHEN nri_category IN ('tsunami')
+                   THEN hlr_mb * TSUN_EXPB  * TSUN_AFREQ
+               WHEN nri_category IN ('avalanche')
+                   THEN hlr_mb * AVLN_EXPB  * AVLN_AFREQ
+               WHEN nri_category IN ('volcano')
+                   THEN hlr_mb * VLCN_EXPB  * VLCN_AFREQ
+           END) merged_building,
 
-       CASE
-           WHEN nri_category IN ('coldwave')
-               THEN hlr_c * CWAV_EXPA  * CWAV_AFREQ
-           WHEN nri_category IN ('drought')
-               THEN hlr_c * CWAV_EXPA  * CWAV_AFREQ
-           WHEN nri_category IN ('hurricane')
-               THEN hlr_c * HRCN_EXPA  * HRCN_AFREQ
-           WHEN nri_category IN ('heatwave')
-               THEN hlr_c * HWAV_EXPA  * HWAV_AFREQ
-           WHEN nri_category IN ('hail')
-               THEN hlr_c * HAIL_EXPA  * HAIL_AFREQ
-           WHEN nri_category IN ('tornado')
-               THEN hlr_c * TRND_EXPA  * TRND_AFREQ
-           WHEN nri_category IN ('riverine')
-               THEN hlr_c * RFLD_EXPA  * RFLD_AFREQ
-           WHEN nri_category IN ('wind')
-               THEN hlr_c * SWND_EXPA  * SWND_AFREQ
-           WHEN nri_category IN ('wildfire')
-               THEN hlr_c * WFIR_EXPA  * WFIR_AFREQ
-           WHEN nri_category IN ('winterweat')
-               THEN hlr_c * WNTW_EXPA  * WNTW_AFREQ
-           END swd_crop,
+       sum(CASE
+               WHEN nri_category IN ('coldwave')
+                   THEN hlr_c * CWAV_EXPA  * CWAV_AFREQ
+               WHEN nri_category IN ('drought')
+                   THEN hlr_c * CWAV_EXPA  * CWAV_AFREQ
+               WHEN nri_category IN ('hurricane')
+                   THEN hlr_c * HRCN_EXPA  * HRCN_AFREQ
+               WHEN nri_category IN ('heatwave')
+                   THEN hlr_c * HWAV_EXPA  * HWAV_AFREQ
+               WHEN nri_category IN ('hail')
+                   THEN hlr_c * HAIL_EXPA  * HAIL_AFREQ
+               WHEN nri_category IN ('tornado')
+                   THEN hlr_c * TRND_EXPA  * TRND_AFREQ
+               WHEN nri_category IN ('riverine')
+                   THEN hlr_c * RFLD_EXPA  * RFLD_AFREQ
+               WHEN nri_category IN ('wind')
+                   THEN hlr_c * SWND_EXPA  * SWND_AFREQ
+               WHEN nri_category IN ('wildfire')
+                   THEN hlr_c * WFIR_EXPA  * WFIR_AFREQ
+               WHEN nri_category IN ('winterweat')
+                   THEN hlr_c * WNTW_EXPA  * WNTW_AFREQ
+           END) swd_crop,
 
-       CASE
-           WHEN nri_category IN ('coldwave')
-               THEN hlr_fc * CWAV_EXPA  * CWAV_AFREQ
-           WHEN nri_category IN ('drought')
-               THEN hlr_fc * CWAV_EXPA  * CWAV_AFREQ
-           WHEN nri_category IN ('hurricane')
-               THEN hlr_fc * HRCN_EXPA  * HRCN_AFREQ
-           WHEN nri_category IN ('heatwave')
-               THEN hlr_fc * HWAV_EXPA  * HWAV_AFREQ
-           WHEN nri_category IN ('hail')
-               THEN hlr_fc * HAIL_EXPA  * HAIL_AFREQ
-           WHEN nri_category IN ('tornado')
-               THEN hlr_fc * TRND_EXPA  * TRND_AFREQ
-           WHEN nri_category IN ('riverine')
-               THEN hlr_fc * RFLD_EXPA  * RFLD_AFREQ
-           WHEN nri_category IN ('wind')
-               THEN hlr_fc * SWND_EXPA  * SWND_AFREQ
-           WHEN nri_category IN ('wildfire')
-               THEN hlr_fc * WFIR_EXPA  * WFIR_AFREQ
-           WHEN nri_category IN ('winterweat')
-               THEN hlr_fc * WNTW_EXPA  * WNTW_AFREQ
-           END fema_crop
+       sum(CASE
+               WHEN nri_category IN ('coldwave')
+                   THEN hlr_fc * CWAV_EXPA  * CWAV_AFREQ
+               WHEN nri_category IN ('drought')
+                   THEN hlr_fc * CWAV_EXPA  * CWAV_AFREQ
+               WHEN nri_category IN ('hurricane')
+                   THEN hlr_fc * HRCN_EXPA  * HRCN_AFREQ
+               WHEN nri_category IN ('heatwave')
+                   THEN hlr_fc * HWAV_EXPA  * HWAV_AFREQ
+               WHEN nri_category IN ('hail')
+                   THEN hlr_fc * HAIL_EXPA  * HAIL_AFREQ
+               WHEN nri_category IN ('tornado')
+                   THEN hlr_fc * TRND_EXPA  * TRND_AFREQ
+               WHEN nri_category IN ('riverine')
+                   THEN hlr_fc * RFLD_EXPA  * RFLD_AFREQ
+               WHEN nri_category IN ('wind')
+                   THEN hlr_fc * SWND_EXPA  * SWND_AFREQ
+               WHEN nri_category IN ('wildfire')
+                   THEN hlr_fc * WFIR_EXPA  * WFIR_AFREQ
+               WHEN nri_category IN ('winterweat')
+                   THEN hlr_fc * WNTW_EXPA  * WNTW_AFREQ
+           END) fema_crop,
+    
+    sum(CASE
+               WHEN nri_category IN ('coldwave')
+                   THEN hlr_mc * CWAV_EXPA  * CWAV_AFREQ
+               WHEN nri_category IN ('drought')
+                   THEN hlr_mc * CWAV_EXPA  * CWAV_AFREQ
+               WHEN nri_category IN ('hurricane')
+                   THEN hlr_mc * HRCN_EXPA  * HRCN_AFREQ
+               WHEN nri_category IN ('heatwave')
+                   THEN hlr_mc * HWAV_EXPA  * HWAV_AFREQ
+               WHEN nri_category IN ('hail')
+                   THEN hlr_mc * HAIL_EXPA  * HAIL_AFREQ
+               WHEN nri_category IN ('tornado')
+                   THEN hlr_mc * TRND_EXPA  * TRND_AFREQ
+               WHEN nri_category IN ('riverine')
+                   THEN hlr_mc * RFLD_EXPA  * RFLD_AFREQ
+               WHEN nri_category IN ('wind')
+                   THEN hlr_mc * SWND_EXPA  * SWND_AFREQ
+               WHEN nri_category IN ('wildfire')
+                   THEN hlr_mc * WFIR_EXPA  * WFIR_AFREQ
+               WHEN nri_category IN ('winterweat')
+                   THEN hlr_mc * WNTW_EXPA  * WNTW_AFREQ
+           END) merged_crop
 FROM hlr
          JOIN national_risk_index.nri_counties_november_2021
               ON geoid = stcofips
-ORDER BY geoid, nri_category
-			
+GROUP BY nri_category
+ORDER BY nri_category
 
 
 
-
-					
-					
-					
-					
