@@ -1421,7 +1421,7 @@ const ProcessDataForChart = (data, falcorCache) => {
 
                                                 acc.buildings += (+get(curr, ['swd_building'], 0)) || 0;
                                                 acc.crop += (+get(curr, ['swd_crop'], 0)) || 0;
-//                                                acc.population += (+get(curr, ['hlr_p'], 0)) || 0;
+//                                                acc.population += (+get(curr, ['swd_people'], 0)) || 0;
                                                 acc.fema_buildings += (+get(curr, ['fema_building'], 0)) || 0;
                                                 acc.fema_crop += (+get(curr, ['fema_crop'], 0)) || 0;
 
@@ -1535,10 +1535,10 @@ const Compare = (props) => {
                 </div>
                 {RenderTabs(view, setView)}
 
-                {renderChart(chartData.nri, 'hazard', null, ['buildings', 'population', 'crop'], 'NRI')}
-                {renderChart(chartData.per_basis, 'hazard', null, ['buildings', 'population', 'crop'
+                {renderChart(chartData.nri, 'hazard', null, ['buildings'/*, 'population', 'crop'*/], 'NRI')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['buildings'/*, 'population', 'crop'*/
                 ], 'SWD')}
-                {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings', 'fema_crop', 'fema_population'], 'FEMA')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings'/*, 'fema_crop', 'fema_population'*/], 'FEMA')}
             </div>
         </AdminLayout>
     )

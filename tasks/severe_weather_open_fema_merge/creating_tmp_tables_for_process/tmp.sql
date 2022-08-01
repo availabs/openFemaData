@@ -328,9 +328,10 @@ with
         coalesce(event_type_formatted , incident_type)   						  nri_category,
         swd_begin_date			  											      swd_begin_date,
         swd_end_date		  											          swd_end_date,
-        string_agg(distinct ofd.disaster_number, ', ')						  					  disaster_numbers,
+        ARRAY_AGG(coalesce(ofd.disaster_number, swd.disaster_number))						  disaster_numbers,
         min(coalesce(ofd.fema_incident_begin_date, swd.fema_incident_begin_date))  fema_incident_begin_date,
         max(coalesce(ofd.fema_incident_end_date, swd.fema_incident_end_date))     fema_incident_end_date,
+
         sum(fema_property_damage/coalesce(ddf.division_factor, 1)) 				  fema_property_damage,
         sum(fema_crop_damage/coalesce(ddf.division_factor, 1))     				  fema_crop_damage,
         sum(swd.swd_property_damage) 											  swd_property_damage,
@@ -408,7 +409,7 @@ with
             geoid,
             coalesce(swd_begin_date, fema_incident_begin_date) event_day_date,
             ARRAY_AGG(event_id)	  event_ids,
-            ARRAY_AGG(distinct disaster_numbers) disaster_number,
+            ARRAY_AGG(disaster_numbers) disaster_number,
             count(1) 					num_events,
             sum (swd_property_damage) swd_property_damage,
             sum (swd_crop_damage) swd_crop_damage,
@@ -444,6 +445,5 @@ with
         order by 1, 2, 3
     )
 
-SELECT * INTO tmp_per_basis_data_zero_loss_detailed FROM final;
-
+SELECT * INTO tmp_per_basis_data_zero_loss_v2 FROM final;
 
