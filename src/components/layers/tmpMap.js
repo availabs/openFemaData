@@ -11,11 +11,58 @@ class fusionData extends LayerContainer {
     // setActive = !!this.viewId
     name = 'Fusion Data'
     id = 'Fusion Data'
-    data = ['56037', '56013']
+    data = []
     filters = {
         region: {
             name: 'region',
-            domain: [],
+            domain: ["01000",
+                     "05000",
+                     "05114",
+                     "05157",
+                     "05171",
+                     "09000",
+                     "10000",
+                     "13000",
+                     "13510",
+                     "22000",
+                     "22006",
+                     "22030",
+                     "23000",
+                     "24000",
+                     "25000",
+                     "25157",
+                     "28000",
+//                     "28055",
+                     "28082",
+//                     "28125",
+                     "28142",
+//                     "28149",
+                     "33000",
+                     "34000",
+//                     "34021",
+                     "36000",
+                     "37000",
+                     "40000",
+                     "42000",
+                     "42052",
+                     "42058",
+                     "44000",
+                     "45000",
+                     "48000",
+                     "48030",
+                     "48192",
+                     "50000",
+                     "51000",
+                     "51039",
+                     "51123",
+                     "51515",
+//                     "51520",
+                     "51560",
+//                     "51630",
+//                     "51720",
+//                     "51730",
+//                     "51760",
+                     "51780"],
             value: ''
         }
     }
@@ -51,8 +98,8 @@ class fusionData extends LayerContainer {
     }
 
     onHover = {
-        pinnable: undefined,
-        layers: [''],
+        pinnable: true,
+        layers: ['counties'],
         HoverComp: ({data, layer}) => {
             const theme = useTheme();
             return (

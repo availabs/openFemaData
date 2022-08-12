@@ -9,7 +9,7 @@ import {RenderTabs} from "./Tabs";
 const hazards =
     {
         'avalanche': 'avln', 'coastal': 'cfld', 'coldwave': 'cwav', 'drought': 'drgt', 'earthquake': 'erqk', 'hail': 'hail', 'heatwave': 'hwav', 'hurricane': 'hrcn',
-        'icestorm': 'istm', 'landslide': 'lnds', 'lightning': 'ltng', 'riverine': 'rfld', 'wind': 'swnd', 'tornado': 'trnd', 'tsunami': 'tsun', 'volcano': 'vlcn',
+        'icestorm': 'istm', 'landslide': 'lnds', /*'lightning': 'ltng',*/ 'riverine': 'rfld', 'wind': 'swnd', 'tornado': 'trnd', 'tsunami': 'tsun', 'volcano': 'vlcn',
         'wildfire': 'wfir', 'winterweat': 'wntw'
     }
 
@@ -1359,24 +1359,7 @@ const Process = (falcorCache) => {
         }
     }, [falcorCache])
 }
-const perBasisFreq = {
-    'coastal':17.8095238095238,
-    'hail':12.1363636363636,
-    'hurricane':98.1428571428571,
-    'landslide':0.5,
-    'lightning':1.21428571428571,
-    'tornado':209.739130434783,
-    'volcano':65,
-    'wildfire':13.6190476190476,
-    'wind':11.2272727272727,
-    'winterweat':12748.24,
-    'icestorm':833.52,
-    'riverine':12519.04,
-    'heatwave':5178.24,
-    'drought':54637.84,
-    'coldwave':3578.48
 
-}
 const ProcessDataForChart = (data, falcorCache) => {
     return React.useMemo(() => {
         console.log('data', data)

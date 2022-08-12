@@ -22,12 +22,12 @@ END;
 $function$
 ;
 
-create table severe_weather_new.grid_196 as
+create table severe_weather_new.grid_196_new as
 SELECT id, grid.geom
 FROM (
          select id, geom from generate_grid(
                  (SELECT ST_Collect(ST_Simplify(geom, 0.1)) FROM geo.tl_2017_us_state where geoid not in ('11', '99', '72', '69', '60', '66', '78')),
-                 0.5,
+                 2,
                  4326)
      ) grid
          JOIN (SELECT st_setsrid(ST_Collect(ST_Simplify(geom, 0.1)), 4326) geom FROM geo.tl_2017_us_state where geoid not in ('11', '99', '72', '69', '60', '66', '78')) area

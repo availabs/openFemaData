@@ -256,6 +256,11 @@ with
                           AND (begin_date_time::date, end_date_time::date) OVERLAPS (fema_incident_begin_date, fema_incident_end_date)
                           AND (
                                      incident_type = event_type_formatted OR
+                                     (incident_type = 'hurricane' AND event_type_formatted = 'coastal') OR
+
+                                     (incident_type = 'hurricane' AND event_type_formatted = 'wind') OR
+
+
                                      (incident_type = 'hurricane' AND event_type_formatted = 'riverine') OR
                                      (incident_type = 'icestorm' AND event_type_formatted = 'coldwave') OR
 --                                      (incident_type = 'icestorm' AND event_type_formatted = 'hail') OR

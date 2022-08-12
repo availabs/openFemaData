@@ -1,7 +1,7 @@
 with t as (SELECT
-               distinct geoid fips,
+               distinct substring(geoid, 1, 5) fips,
                         CASE
-                            WHEN substring(geoid, 1, 2) IN ('23', '33', '25', '50', '44', '09', '34', '10', '24', '42', '36', '51', '54', '10')
+                            WHEN substring(geoid, 1, 2) IN ('11', '23', '33', '25', '50', '44', '09', '34', '10', '24', '42', '36', '51', '54', '10')
                                 THEN 'A'
 
                             WHEN substring(geoid, 1, 2) IN ('37', '45', '13', '12', '01', '28', '47', '21')
@@ -27,9 +27,7 @@ with t as (SELECT
 
                             ELSE null
                             END region
-           FROM severe_weather_new.details_fema_per_day_basis
+           FROM (select distinct substring(geoid, 1, 5) geoid from severe_weather_new.details where geoid is not null) s
            where geoid is not null)
 
-INSERT INTO severe_weather_new.fips_to_regions_and_surrounding_counties(
-    fips, region)
-SELECT * FROM t
+SELECT * INTO severe_weather_new.fips_to_regions_and_surrounding_counties FROM t

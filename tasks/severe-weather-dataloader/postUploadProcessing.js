@@ -130,6 +130,49 @@ const updateGeoZzone = async () => {
     return db.query(query);
 }
 
+const updateGeoZzoneV2 = async () => {
+    -- zone M should be null
+    -- records with begin_coords should map to geo.tl....
+    -- records with zone Z and no begin_coords should follow below sql
+    -- Z zone, no being_coords records with cz_name not mapping to county names remain null as there's no right way to map them
+    let query = `
+        with states as (
+            SELECT id, geoid, stusps, name
+            FROM geo.tl_2017_us_state
+        ),
+        zone_to_county as (
+            select zone, state, stusps, states.geoid, county, lpad(fips::text, 5, '0') fips
+            from severe_weather.zone_to_county
+            JOIN states
+            ON states.stusps = state
+            order by 1, 2, 3
+        )
+
+        -- select
+        -- cz_fips d_cz_fips, d.state d_state, state_fips d_state_fips, cz_name d_zone_name,
+        -- zone ztc_zone, ztc.state ztc_state, county ztc_county, lpad(fips::text, 5, '0') ztc_fips, d.geoid, d.tmp_geoid,
+        -- case when lpad(fips::text, 5, '0') = d.geoid then 1 else 0 end
+        -- from severe_weather_new.details d
+        -- JOIN zone_to_county ztc
+        -- on d.cz_fips = ztc.zone
+        -- AND LPAD(state_fips::TEXT, 2, '0') = ztc.geoid
+        -- AND lower(cz_name) like '%' || lower(county) || '%'
+        -- where cz_type = 'Z' and begin_lat = '0' and lpad(fips::text, 5, '0') != d.geoid
+        -- order by 1, 2
+        -- limit 1000
+
+        -- UPDATE severe_weather_new.details d
+        -- SET tmp_geoid = lpad(fips::text, 5, '0')
+        -- FROM zone_to_county ztc
+        -- WHERE (cz_type = 'Z' and begin_lat = '0')
+        -- AND d.cz_fips = ztc.zone
+        -- AND LPAD(state_fips::TEXT, 2, '0') = ztc.geoid
+        -- AND lower(cz_name) like '%' || lower(county) || '%'
+        `
+
+    return db.query(query);
+}
+
 const updateGeoMzone = async () => {
     let query = `
         update severe_weather_new.details

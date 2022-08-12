@@ -159,7 +159,7 @@ with   lrpbs as (
 ),
        grid_variance as (
            select id, nri_category, variance(building_loss_ratio_per_basis) b_va
-           from tmp_fips_to_grid_mapping_196 grid
+           from tmp_fips_to_grid_mapping_196_new grid
                     JOIN lrpbs
                          ON grid.fips = lrpbs.geoid
            group by 1, 2
@@ -169,8 +169,8 @@ with   lrpbs as (
                   (covered_area * 100) / total_area percent_area_covered,
                   rank() over (partition by grid.fips, nri_category order by b_va, ((covered_area * 100) / total_area) desc ),
                   first_value(grid.id) over (partition by grid.fips, nri_category order by b_va, ((covered_area * 100) / total_area) desc ) lowest_var_highest_area_id
-           from tmp_fips_to_grid_mapping_196 grid
-                    JOIN (select fips, sum(covered_area) total_area from tmp_fips_to_grid_mapping_196 group by 1) total_area
+           from tmp_fips_to_grid_mapping_196_new grid
+                    JOIN (select fips, sum(covered_area) total_area from tmp_fips_to_grid_mapping_196_new group by 1) total_area
                          ON total_area.fips = grid.fips
                     JOIN grid_variance
                          ON grid_variance.id = grid.id
