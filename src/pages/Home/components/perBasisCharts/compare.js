@@ -1411,12 +1411,19 @@ const ProcessDataForChart = (data, falcorCache) => {
             per_basis: Object.keys(hazards).map(h => {
                 return data.per_basis_hlr.filter(d => d.nri_category === h)
                                             .reduce((acc, curr) => {
-                                                let tmpNRIExposure = data.nri_exposure.find(ne => ne.nri_category === h && ne.geoid === curr.geoid);
-                                                acc.buildings += (+get(curr, ['hlr_b'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq) || 0;
-                                                acc.crop += (+get(curr, ['hlr_c'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq) || 0;
-                                                acc.population += (+get(curr, ['hlr_p'], 0) * tmpNRIExposure.exppe * tmpNRIExposure.afreq) || 0;
-                                                acc.fema_buildings += (+get(curr, ['hlr_f'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq) || 0;
-                                                acc.fema_crop += (+get(curr, ['hlr_fc'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq) || 0;
+//                                                let tmpNRIExposure = data.nri_exposure.find(ne => ne.nri_category === h && ne.geoid === curr.geoid);
+//                                                acc.buildings += (+get(curr, ['hlr_b'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq) || 0;
+//                                                acc.crop += (+get(curr, ['hlr_c'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq) || 0;
+//                                                acc.population += (+get(curr, ['hlr_p'], 0) * tmpNRIExposure.exppe * tmpNRIExposure.afreq) || 0;
+//                                                acc.fema_buildings += (+get(curr, ['hlr_f'], 0) * tmpNRIExposure.expb * tmpNRIExposure.afreq) || 0;
+//                                                acc.fema_crop += (+get(curr, ['hlr_fc'], 0) * tmpNRIExposure.expa * tmpNRIExposure.afreq) || 0;
+
+
+                                                acc.buildings += (+get(curr, ['swd_building'], 0)) || 0;
+                                                acc.crop += (+get(curr, ['swd_crop'], 0)) || 0;
+//                                                acc.population += (+get(curr, ['swd_people'], 0)) || 0;
+                                                acc.fema_buildings += (+get(curr, ['fema_building'], 0)) || 0;
+                                                acc.fema_crop += (+get(curr, ['fema_crop'], 0)) || 0;
 
                                                 return acc;
                                             }, {
@@ -1528,10 +1535,10 @@ const Compare = (props) => {
                 </div>
                 {RenderTabs(view, setView)}
 
-                {renderChart(chartData.nri, 'hazard', null, ['buildings', 'population', 'crop'], 'NRI')}
-                {renderChart(chartData.per_basis, 'hazard', null, ['buildings', 'population', 'crop'
+                {renderChart(chartData.nri, 'hazard', null, ['buildings'/*, 'population', 'crop'*/], 'NRI')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['buildings'/*, 'population', 'crop'*/
                 ], 'SWD')}
-                {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings', 'fema_crop', 'fema_population'], 'FEMA')}
+                {renderChart(chartData.per_basis, 'hazard', null, ['fema_buildings'/*, 'fema_crop', 'fema_population'*/], 'FEMA')}
             </div>
         </AdminLayout>
     )

@@ -1,0 +1,7 @@
+select *
+from severe_weather_new.details
+where substring(geoid, 1, 5) = '48201'
+and event_type_formatted = 'coastal'
+and year >= 1996 and year <= 2019
+
+
