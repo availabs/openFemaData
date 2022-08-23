@@ -17,7 +17,7 @@ with   merged_data_for_per_basis as (
         sum(fema_property_damage)        fema_property_damage,
         sum(fema_crop_damage)        fema_crop_damage
 
-    FROM severe_weather_new.tmp_merged_data
+    FROM severe_weather_new.tmp_merged_data_updated_fema_data
     GROUP BY 1, 2, 3
 ),
        details_fema_per_basis as (
