@@ -3,8 +3,8 @@ with zero_loss_count as (
            (max(CASE
                     WHEN nri_category IN ('coldwave')
                         THEN CWAV_AFREQ
-                    WHEN nri_category IN ('drought')
-                        THEN DRGT_AFREQ
+--                     WHEN nri_category IN ('drought') -- not for buildings
+--                         THEN DRGT_AFREQ
                     WHEN nri_category IN ('hail')
                         THEN HAIL_AFREQ
                     WHEN nri_category IN ('heatwave')

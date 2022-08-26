@@ -5,8 +5,8 @@ with   merged_data_for_per_basis as (
         nri_category nri_category,
         min(begin_date_time)     swd_begin_date,
         max(end_date_time)       swd_end_date,
-        sum(property_damage_adjusted)        swd_property_damage,
-        sum(crop_damage_adjusted)        swd_crop_damage,
+        sum(property_damage)        swd_property_damage,
+        sum(crop_damage)        swd_crop_damage,
         sum(injuries_direct)        injuries_direct,
         sum(injuries_indirect)        injuries_indirect,
         sum(deaths_direct)        deaths_direct,
@@ -15,7 +15,7 @@ with   merged_data_for_per_basis as (
     WHERE year >= 1996 and year <= 2019
       AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
       AND geoid is not null
-      AND property_damage_adjusted > 0
+      AND property_damage > 0
     GROUP BY 1, 2, 3
 ),
        details_fema_per_basis as (
