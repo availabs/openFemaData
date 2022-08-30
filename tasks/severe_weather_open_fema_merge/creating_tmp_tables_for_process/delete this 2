@@ -1,28 +1,51 @@
-with calcs as (
-SELECT geoid, swd_raw_total, our_total, nri_total, percent_diff_total
-	FROM public.tmp_full_data_table
-	where percent_diff_total is not null
-	order by percent_diff_total desc
+with per_basis_summary as (
+	select nri_category,
+		sum(case when ctype = 'buildings' then 1 else 0 end) as num_b,
+		sum(case when ctype = 'crop' then 1 else 0 end) as num_c,
+		sum(case when ctype = 'population' then 1 else 0 end) as num_p,
+		sum(case when ctype = 'buildings' then damage else 0 end) as loss_b,
+		sum(case when ctype = 'crop' then damage else 0 end) as loss_c,
+		sum(case when ctype = 'population' then damage else 0 end) as loss_pe
+
+	from public.tmp_pb_normalised_pop
+	where ctype = 'population'
+	group by 1
+),
+swd_summary as (
+SELECT  nri_category, count(1) swd_total_events,
+	sum(
+                   coalesce(deaths_direct,0) +
+                   coalesce(deaths_indirect,0) +
+                   (
+                       (
+                           coalesce(injuries_direct,0) +
+                           coalesce(injuries_indirect,0)
+                           ) / 10
+                       )
+                   ) * 7600000 as population_loss,
+
+	(
+                   ( sum(coalesce(injuries_direct, 0) + coalesce(injuries_indirect, 0)) / 10 ) +
+                   sum(coalesce(deaths_direct, 0)) + sum(coalesce(deaths_indirect, 0))
+                ) * 7600000   original_damage,
+
+	(sum(deaths_direct) + sum(deaths_indirect) +
+	((sum(injuries_direct) + sum(injuries_indirect))/10)) * 7600000 i
+
+
+    FROM severe_weather_new.details
+       WHERE year >= 1996 and year <= 2019
+             AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
+             AND geoid is not null
+             AND (injuries_direct > 0 OR injuries_indirect > 0 OR deaths_direct > 0 OR deaths_indirect > 0 )
+    group by 1
 )
 
-select substring(details.geoid, 1, 5) geoid, state_fips::text || lpad(cz_fips::text, 3, '0') cz_fips,
-swd_raw_total, property_damage event_damage, our_total, nri_total,
-percent_diff_total, stcofips,
-cfld_hlrb * cfld_afreq * cfld_expb nri_cz_fips_total,
-((our_total - (cfld_hlrb * cfld_afreq * cfld_expb)) / (cfld_hlrb * cfld_afreq * cfld_expb)) * 100 percent_diff_our_total_nri_cz_fips_total
-,((nri_total - (cfld_hlrb * cfld_afreq * cfld_expb)) / (cfld_hlrb * cfld_afreq * cfld_expb)) * 100 percent_diff_nri_total_nri_cz_fips_total
 
-from severe_weather_new.details
-JOIN calcs
-ON substring(details.geoid, 1, 5) = calcs.geoid
-and details.event_type_formatted = 'coastal'
-JOIN national_risk_index.nri_counties_november_2021 nri
-ON nri.stcofips = state_fips::text || lpad(cz_fips::text, 3, '0')
-and cfld_expb > 0
-where cz_type = 'Z'
--- and substring(details.geoid, 1, 5) = ''
-order by geoid, cz_fips desc
-
-
-
+select a.nri_category,  a.population_loss, original_damage, i, b.loss_pe,
+(a.population_loss -  b.loss_pe) ,
+(original_damage -  b.loss_pe) / 7600000
+from swd_summary as a
+join per_basis_summary as b
+on a.nri_category = b.nri_category
 

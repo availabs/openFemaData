@@ -23,21 +23,36 @@ with zero_loss_count as (
                         THEN TSUN_AFREQ
                     WHEN nri_category IN ('winterweat')
                         THEN WNTW_AFREQ
-               -- 				    WHEN nri_category IN ('tornado')
---                    		THEN TRND_AFREQ
+                    WHEN nri_category IN ('tornado')
+                        THEN TRND_AFREQ
                     ELSE null
                END) * 24) - count(1) records_to_insert
     FROM national_risk_index.nri_counties_november_2021 a
-             JOIN tmp_pb_normalised b
+             JOIN tmp_pb_normalised_pop_v2 b
                   ON a.stcofips = b.geoid
-    WHERE nri_category IN
-          ('coldwave', 'drought', 'hail', 'heatwave', 'hurricane', 'icestorm', 'lightning', 'riverine', 'wind', 'tsunami', 'winterweat')
+             LEFT join (
+        select distinct substring(geoid, 1, 5) geoid, begin_date_time, (array_agg(tor_f_scale))[1] tor_f_scale
+        from severe_weather_new.details
+        where nri_category = 'tornado'
+        group by 1, 2
+    ) c
+                       on b.geoid = substring(c.geoid, 1, 5)
+                           and begin_date_time = event_day_date
+                           and b.nri_category = 'tornado'
+
+    WHERE  nri_category IN
+           (
+            'coldwave', 'drought', 'hail', 'heatwave',
+            'hurricane', 'icestorm', 'lightning', 'riverine',
+            'wind', 'tsunami', 'winterweat'
+               )
+       OR (nri_category = 'tornado' and tor_f_scale not like '%4' and tor_f_scale not like '%5' )
     group by 1, 2, 3
 ),
      records_to_insert as (
          select generate_series(1, records_to_insert::integer),
                 ctype, nri_category, geoid,
-                null event_day_date, null event_ids, null num_events, 0 damage
+                null event_day_date, null event_ids, null num_events, 0 damage, 0 damage_adjusted
          from zero_loss_count
          where records_to_insert >= 0
            and nri_category not in ('drought')
@@ -47,10 +62,13 @@ with zero_loss_count as (
 
          select generate_series(1, records_to_insert::integer),
                 ctype, nri_category, geoid,
-                null event_day_date, null event_ids, null num_events, 0 damage
+                null event_day_date, null event_ids, null num_events, 0 damage, 0 damage_adjusted
          from zero_loss_count
          where records_to_insert >= 0
-           and nri_category in ('coldwave', 'drought', 'hail', 'heatwave', 'hurricane', 'riverine', 'wind', 'wildfire', 'winterweat' --,'tornado',
+           and nri_category in (
+                                'coldwave', 'drought', 'hail',
+                                'heatwave', 'hurricane', 'riverine',
+                                'wind', 'tornado', 'winterweat'
              )
            and ctype = 'crop'
 
@@ -58,21 +76,16 @@ with zero_loss_count as (
 
          select generate_series(1, records_to_insert::integer),
                 ctype, nri_category, geoid,
-                null event_day_date, null event_ids, null num_events, 0 damage
+                null event_day_date, null event_ids, null num_events, 0 damage, 0 damage_adjusted
          from zero_loss_count
          where records_to_insert >= 0
            and nri_category not in ('drought')
            and ctype = 'population'
      )
 
--- select ctype, count(1) from records_to_insert group by 1
-
-INSERT INTO tmp_pb_normalised
-SELECT ctype, nri_category, geoid, event_day_date::timestamp, event_ids::integer[], num_events::bigint, damage
+INSERT INTO tmp_pb_normalised_pop_v2
+SELECT ctype, nri_category, geoid, event_day_date::timestamp, event_ids::integer[], num_events::bigint, damage, damage_adjusted
 FROM records_to_insert
 
--- DELETE FROM tmp_pb_normalised
+-- DELETE FROM tmp_pb_normalised_pop_v2
 -- WHERE event_day_date is null
-
-
-

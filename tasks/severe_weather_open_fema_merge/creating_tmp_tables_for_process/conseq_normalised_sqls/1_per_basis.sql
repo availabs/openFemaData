@@ -38,10 +38,16 @@ with   buildings as (
                nri_category nri_category,
                min(begin_date_time)     swd_begin_date,
                max(end_date_time)       swd_end_date,
-               (sum(injuries_direct) +
-               sum(injuries_indirect) +
-               sum(deaths_direct) +
-               sum(deaths_indirect) / 10) * 7600000   damage
+               sum(
+                   coalesce(deaths_direct::float,0) +
+                   coalesce(deaths_indirect::float,0) +
+                   (
+                       (
+                           coalesce(injuries_direct::float,0) +
+                           coalesce(injuries_indirect::float,0)
+                           ) / 10
+                       )
+                   ) * 7600000   damage
            FROM severe_weather_new.details
            WHERE year >= 1996 and year <= 2019
              AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
@@ -94,19 +100,19 @@ with   buildings as (
        final as (
            select ctype, nri_category, geoid, event_day_date,
                   event_ids, num_events,
-                  damage
+                  damage, null::double precision damage_adjusted
            from aggregation
 
            UNION ALL
 
            select ctype, nri_category, geoid, event_day_date,
                   null as event_ids, null as num_events,
-                  damage
+                  damage, null::double precision damage_adjusted
            from details_fema_per_basis
 
            order by 1, 2, 3, 4
        )
 
-SELECT * INTO tmp_pb_normalised FROM final
+SELECT * INTO tmp_pb_normalised_pop FROM final
 
 

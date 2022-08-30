@@ -98,7 +98,7 @@ with   lrpbs as (
                                     THEN damage_adjusted::float / NULLIF (CFLD_EXPPE, 0)
                                 END, 0)
                END loss_ratio_per_basis
-    FROM tmp_pb_normalised  pb
+    FROM tmp_pb_normalised_pop_v2  pb
              JOIN national_risk_index.nri_counties_november_2021 nri
                   ON pb.geoid = nri.stcofips
 -- 	WHERE nri_category = 'hurricane' and geoid = '37013' and event_day_date = '1996-07-12 10:00:00'
@@ -302,6 +302,6 @@ with   lrpbs as (
        )
 
 
-SELECT * INTO tmp_hlr_normalised FROM hlr
+SELECT * INTO tmp_hlr_normalised_pop_v2 FROM hlr
 
 
