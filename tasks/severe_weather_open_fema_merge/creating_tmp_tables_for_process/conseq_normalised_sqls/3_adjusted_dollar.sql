@@ -36,7 +36,7 @@ with cpi20 as (
              WHEN extract(MONTH from event_day_date) = 12
                  THEN dec
             END AS month_2020_cpi
-    from tmp_pb_normalised_pop_v2, cpi20
+    from tmp_pb_normalised_date, cpi20
     where ctype != 'population'
       and event_day_date is not null
 ),
@@ -82,11 +82,11 @@ with cpi20 as (
                             ON t.year = cpi.year
      )
 
--- update tmp_pb_normalised_pop_v2
+-- update tmp_pb_normalised_date
 -- set damage_adjusted = damage
 -- where ctype = 'population'
 
-update tmp_pb_normalised_pop_v2 dst
+update tmp_pb_normalised_date dst
 set damage_adjusted = final.adjusted_damage
 from final
 where dst.event_day_date = final.event_day_date

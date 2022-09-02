@@ -28,10 +28,10 @@ with zero_loss_count as (
                     ELSE null
                END) * 24) - count(1) records_to_insert
     FROM national_risk_index.nri_counties_november_2021 a
-             JOIN tmp_pb_normalised_pop_v2 b
+             JOIN tmp_pb_normalised_date b
                   ON a.stcofips = b.geoid
              LEFT join (
-        select distinct substring(geoid, 1, 5) geoid, begin_date_time, (array_agg(tor_f_scale))[1] tor_f_scale
+        select distinct substring(geoid, 1, 5) geoid, begin_date_time::date, (array_agg(tor_f_scale))[1] tor_f_scale
         from severe_weather_new.details
         where nri_category = 'tornado'
         group by 1, 2
@@ -83,9 +83,9 @@ with zero_loss_count as (
            and ctype = 'population'
      )
 
-INSERT INTO tmp_pb_normalised_pop_v2
+INSERT INTO tmp_pb_normalised_date
 SELECT ctype, nri_category, geoid, event_day_date::timestamp, event_ids::integer[], num_events::bigint, damage, damage_adjusted
 FROM records_to_insert
 
--- DELETE FROM tmp_pb_normalised_pop_v2
+-- DELETE FROM tmp_pb_normalised_date
 -- WHERE event_day_date is null

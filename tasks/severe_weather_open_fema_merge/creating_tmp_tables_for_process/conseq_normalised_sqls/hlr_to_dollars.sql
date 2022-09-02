@@ -26,7 +26,14 @@ SELECT nri_category,
                             WHEN nri_category IN ('wind')
                                 THEN hlr * SWND_EXPB  * SWND_AFREQ
                             WHEN nri_category IN ('wildfire')
-                                THEN hlr * WFIR_EXPB  * WFIR_AFREQ
+                                THEN (
+                                      CASE WHEN geoid IN (select stcofips
+                                                          FROM national_risk_index.nri_counties_november_2021
+                                                          where wfir_hlrb = 0.4)
+                                               THEN 0.4
+                                           ELSE hlr
+                                          END
+                                      ) * WFIR_EXPB  * WFIR_AFREQ
                             WHEN nri_category IN ('winterweat')
                                 THEN hlr * WNTW_EXPB  * WNTW_AFREQ
                             WHEN nri_category IN ('tsunami')
@@ -193,7 +200,7 @@ SELECT nri_category,
            END nri
 
 
-FROM tmp_hlr_normalised_pop
+FROM tmp_hlr_normalised_date
          JOIN national_risk_index.nri_counties_november_2021
               ON geoid = stcofips
 GROUP BY 1, 2

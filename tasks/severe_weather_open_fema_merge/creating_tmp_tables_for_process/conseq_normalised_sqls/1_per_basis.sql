@@ -4,8 +4,8 @@ with   buildings as (
         event_id,
         substring(geoid, 1, 5) geoid,
         nri_category nri_category,
-        min(begin_date_time)     swd_begin_date,
-        max(end_date_time)       swd_end_date,
+        min(begin_date_time)::date     swd_begin_date,
+        max(end_date_time)  ::date      swd_end_date,
         sum(property_damage)     damage
     FROM severe_weather_new.details
     WHERE year >= 1996 and year <= 2019
@@ -20,8 +20,8 @@ with   buildings as (
                event_id,
                substring(geoid, 1, 5) geoid,
                nri_category nri_category,
-               min(begin_date_time)     swd_begin_date,
-               max(end_date_time)       swd_end_date,
+               min(begin_date_time)::date      swd_begin_date,
+               max(end_date_time)::date        swd_end_date,
                sum(crop_damage)         damage
            FROM severe_weather_new.details
            WHERE year >= 1996 and year <= 2019
@@ -36,8 +36,8 @@ with   buildings as (
                event_id,
                substring(geoid, 1, 5) geoid,
                nri_category nri_category,
-               min(begin_date_time)     swd_begin_date,
-               max(end_date_time)       swd_end_date,
+               min(begin_date_time)::date      swd_begin_date,
+               max(end_date_time)::date        swd_end_date,
                sum(
                    coalesce(deaths_direct::float,0) +
                    coalesce(deaths_indirect::float,0) +
@@ -113,6 +113,6 @@ with   buildings as (
            order by 1, 2, 3, 4
        )
 
-SELECT * INTO tmp_pb_normalised_pop FROM final
+SELECT * INTO tmp_pb_normalised_date FROM final
 
 
