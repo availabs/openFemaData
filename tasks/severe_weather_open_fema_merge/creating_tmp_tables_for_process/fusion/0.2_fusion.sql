@@ -45,11 +45,17 @@ with disaster_declarations_summary_grouped_for_merge as (
              min(begin_date_time::date) swd_begin_date,
              max(end_date_time::date) swd_end_date,
              sum(property_damage)/coalesce(edf.division_factor, 1)                        as swd_property_damage,
-             sum(crop_damage)/coalesce(edf.division_factor, 1) 							 as swd_crop_damage,
-             sum(injuries_direct)/coalesce(edf.division_factor, 1)                        as injuries_direct,
-             sum(injuries_indirect)/coalesce(edf.division_factor, 1)                         injuries_indirect,
-             sum(deaths_direct)/coalesce(edf.division_factor, 1)                             deaths_direct,
-             sum(deaths_indirect)/coalesce(edf.division_factor, 1)                           deaths_indirect
+             sum(crop_damage)/coalesce(edf.division_factor, 1) 							  as swd_crop_damage,
+             (sum(
+                          coalesce(deaths_direct::float,0) +
+                          coalesce(deaths_indirect::float,0) +
+                          (
+                                  (
+                                          coalesce(injuries_direct::float,0) +
+                                          coalesce(injuries_indirect::float,0)
+                                      ) / 10
+                              )
+                  ) * 7600000)/coalesce(edf.division_factor, 1)                            as swd_population_damage
          FROM severe_weather_new.details sw
                   LEFT JOIN disaster_number_to_event_id_mapping_without_hazard_type dn_eid
                             on sw.event_id = dn_eid.event_id
@@ -78,10 +84,7 @@ with disaster_declarations_summary_grouped_for_merge as (
 
                 swd_property_damage,
                 swd_crop_damage,
-                injuries_direct,
-                injuries_indirect,
-                deaths_direct,
-                deaths_indirect
+                swd_population_damage
          FROM swd
                   FULL OUTER JOIN open_fema_data.tmp_disaster_loss_summary_v2 ofd
                                   ON swd.disaster_number = ofd.disaster_number
@@ -106,10 +109,7 @@ with disaster_declarations_summary_grouped_for_merge as (
                 fema_crop_damage/coalesce(ddf, 1) fema_crop_damage,
                 swd_property_damage,
                 swd_crop_damage,
-                injuries_direct,
-                injuries_indirect,
-                deaths_direct,
-                deaths_indirect,
+                swd_population_damage,
                 coalesce(fema_property_damage/coalesce(ddf, 1), swd_property_damage) fusion_property_damage,
                 coalesce(fema_crop_damage/coalesce(ddf, 1), swd_crop_damage) fusion_crop_damage
          FROM full_data fd

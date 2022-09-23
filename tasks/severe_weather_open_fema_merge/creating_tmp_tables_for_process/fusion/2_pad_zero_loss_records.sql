@@ -1,6 +1,6 @@
 with pb as (
     select pb.geoid geoid, pb.nri_category, ctype, event_day_date, tor_f_scale
-    from tmp_pb_v2 pb
+    from tmp_pb_fusion_v4 pb
              LEFT JOIN (
         SELECT DISTINCT substring(geoid, 1, 5) geoid,
                         nri_category cat,
@@ -89,9 +89,9 @@ with pb as (
            and ctype = 'population'
      )
 
-INSERT INTO tmp_pb_v2
+INSERT INTO tmp_pb_fusion_v4
 SELECT null id, ctype, nri_category, geoid, event_day_date::timestamp, event_ids::integer[], num_events::bigint, damage, damage_adjusted
 FROM records_to_insert
 
--- DELETE FROM tmp_pb_v2
+-- DELETE FROM tmp_pb_fusion_v4
 -- WHERE event_day_date is null

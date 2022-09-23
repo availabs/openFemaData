@@ -4,15 +4,15 @@ with   buildings as (
         event_id,
         substring(geoid, 1, 5) geoid,
         nri_category nri_category,
-        min(begin_date_time)::date     swd_begin_date,
-        max(end_date_time)  ::date      swd_end_date,
-        sum(property_damage)     damage
-    FROM severe_weather_new.details
-    WHERE year >= 1996 and year <= 2019
+        min(coalesce(swd_begin_date, fema_incident_begin_date))::date     swd_begin_date,
+        max(coalesce(swd_end_date, fema_incident_end_date))  ::date      swd_end_date,
+        sum(fusion_property_damage)     damage
+    FROM severe_weather_new.tmp_merged_data_v3
+    WHERE extract(YEAR from coalesce(swd_begin_date, fema_incident_begin_date)) >= 1996 and extract(YEAR from coalesce(swd_end_date, fema_incident_end_date)) <= 2019
       AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
       AND geoid is not null
-      AND property_damage > 0
-    GROUP BY 1, 2, 3
+--       AND fusion_property_damage > 0
+    GROUP BY 1, 2, 3, 4
 ),
        crop as (
            select
@@ -20,15 +20,15 @@ with   buildings as (
                event_id,
                substring(geoid, 1, 5) geoid,
                nri_category nri_category,
-               min(begin_date_time)::date      swd_begin_date,
-               max(end_date_time)::date        swd_end_date,
-               sum(crop_damage)         damage
-           FROM severe_weather_new.details
-           WHERE year >= 1996 and year <= 2019
+               min(coalesce(swd_begin_date, fema_incident_begin_date))::date      swd_begin_date,
+               max(coalesce(swd_end_date, fema_incident_end_date))::date        swd_end_date,
+               sum(fusion_crop_damage)         damage
+           FROM severe_weather_new.tmp_merged_data_v3
+           WHERE extract(YEAR from coalesce(swd_begin_date, fema_incident_begin_date)) >= 1996 and extract(YEAR from coalesce(swd_end_date, fema_incident_end_date)) <= 2019
              AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
              AND geoid is not null
-             AND crop_damage > 0
-           GROUP BY 1, 2, 3
+--              AND fusion_crop_damage > 0
+           GROUP BY 1, 2, 3, 4
        ),
        population as (
            select
@@ -36,24 +36,15 @@ with   buildings as (
                event_id,
                substring(geoid, 1, 5) geoid,
                nri_category nri_category,
-               min(begin_date_time)::date      swd_begin_date,
-               max(end_date_time)::date        swd_end_date,
-               sum(
-                   coalesce(deaths_direct::float,0) +
-                   coalesce(deaths_indirect::float,0) +
-                   (
-                       (
-                           coalesce(injuries_direct::float,0) +
-                           coalesce(injuries_indirect::float,0)
-                           ) / 10
-                       )
-                   ) * 7600000   damage
-           FROM severe_weather_new.details
-           WHERE year >= 1996 and year <= 2019
+               min(coalesce(swd_begin_date, fema_incident_begin_date))::date      swd_begin_date,
+               max(coalesce(swd_end_date, fema_incident_end_date))::date        swd_end_date,
+               sum(swd_population_damage)   damage
+           FROM severe_weather_new.tmp_merged_data_v3
+           WHERE extract(YEAR from coalesce(swd_begin_date, fema_incident_begin_date)) >= 1996 and extract(YEAR from coalesce(swd_end_date, fema_incident_end_date)) <= 2019
              AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
              AND geoid is not null
-             AND (injuries_direct > 0 OR injuries_indirect > 0 OR deaths_direct > 0 OR deaths_indirect > 0 )
-           GROUP BY 1, 2, 3
+--              AND swd_population_damage > 0
+           GROUP BY 1, 2, 3, 4
        ), alldata as (
     select * from buildings
 
@@ -113,6 +104,4 @@ with   buildings as (
            order by 1, 2, 3, 4
        )
 
-SELECT row_number() over () id, * INTO tmp_pb_for_doc FROM final
-
-
+SELECT row_number() over () id, * INTO tmp_pb_fusion_v2 FROM final
