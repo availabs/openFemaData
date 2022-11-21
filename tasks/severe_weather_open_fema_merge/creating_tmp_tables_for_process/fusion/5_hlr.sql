@@ -98,7 +98,7 @@ with   lrpbs as (
                                     THEN damage_adjusted:: double precision / NULLIF (CFLD_EXPPE, 0)
                                 END, 0)
                END loss_ratio_per_basis
-    FROM tmp_pb_normalised_date  pb
+    FROM tmp_pb_fusion_v4  pb
              JOIN national_risk_index.nri_counties_november_2021 nri
                   ON pb.geoid = nri.stcofips
 -- 	WHERE nri_category = 'hurricane' and geoid = '37013' and event_day_date = '1996-07-12 10:00:00'
@@ -178,7 +178,7 @@ with   lrpbs as (
            order by 1, 2, 3, 4
        ),
        grid_variance as (
-           select id, nri_category, variance(loss_ratio_per_basis) va
+           select grid.id, nri_category, variance(loss_ratio_per_basis) va
            from tmp_fips_to_grid_mapping_196_newer grid
                     JOIN lrpbs
                          ON grid.fips = lrpbs.geoid
@@ -302,6 +302,6 @@ with   lrpbs as (
        )
 
 
-SELECT * INTO tmp_hlr_normalised_date FROM hlr
+SELECT * INTO tmp_hlr_fusion_v4 FROM hlr
 
 

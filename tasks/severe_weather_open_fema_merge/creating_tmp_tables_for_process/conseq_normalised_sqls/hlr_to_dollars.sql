@@ -200,7 +200,7 @@ SELECT nri_category,
            END nri
 
 
-FROM tmp_hlr_normalised_date
+FROM tmp_hlr
          JOIN national_risk_index.nri_counties_november_2021
               ON geoid = stcofips
 GROUP BY 1, 2

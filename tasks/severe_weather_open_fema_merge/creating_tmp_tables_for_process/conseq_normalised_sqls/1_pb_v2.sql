@@ -6,12 +6,11 @@ with   buildings as (
         nri_category nri_category,
         min(begin_date_time)::date     swd_begin_date,
         max(end_date_time)  ::date      swd_end_date,
-        sum(property_damage)     damage
+        coalesce(sum(property_damage), 0)     damage
     FROM severe_weather_new.details
     WHERE year >= 1996 and year <= 2019
       AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
       AND geoid is not null
-      AND property_damage > 0
     GROUP BY 1, 2, 3
 ),
        crop as (
@@ -22,12 +21,11 @@ with   buildings as (
                nri_category nri_category,
                min(begin_date_time)::date      swd_begin_date,
                max(end_date_time)::date        swd_end_date,
-               sum(crop_damage)         damage
+               coalesce(sum(crop_damage), 0)         damage
            FROM severe_weather_new.details
            WHERE year >= 1996 and year <= 2019
              AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
              AND geoid is not null
-             AND crop_damage > 0
            GROUP BY 1, 2, 3
        ),
        population as (
@@ -38,21 +36,20 @@ with   buildings as (
                nri_category nri_category,
                min(begin_date_time)::date      swd_begin_date,
                max(end_date_time)::date        swd_end_date,
-               sum(
-                   coalesce(deaths_direct::float,0) +
-                   coalesce(deaths_indirect::float,0) +
-                   (
-                       (
-                           coalesce(injuries_direct::float,0) +
-                           coalesce(injuries_indirect::float,0)
-                           ) / 10
-                       )
-                   ) * 7600000   damage
+               coalesce(sum(
+                                    coalesce(deaths_direct::float,0) +
+                                    coalesce(deaths_indirect::float,0) +
+                                    (
+                                            (
+                                                    coalesce(injuries_direct::float,0) +
+                                                    coalesce(injuries_indirect::float,0)
+                                                ) / 10
+                                        )
+                            ), 0) * 7600000   damage
            FROM severe_weather_new.details
            WHERE year >= 1996 and year <= 2019
              AND nri_category not in ('Dense Fog', 'Marine Dense Fog', 'Dense Smoke', 'Dust Devil', 'Dust Storm', 'Astronomical Low Tide', 'Northern Lights', 'OTHER')
              AND geoid is not null
-             AND (injuries_direct > 0 OR injuries_indirect > 0 OR deaths_direct > 0 OR deaths_indirect > 0 )
            GROUP BY 1, 2, 3
        ), alldata as (
     select * from buildings
@@ -113,6 +110,6 @@ with   buildings as (
            order by 1, 2, 3, 4
        )
 
-SELECT row_number() over () id, * INTO tmp_pb_for_doc FROM final
+SELECT row_number() over () id, * INTO tmp_pb_for_doc_v2 FROM final
 
 

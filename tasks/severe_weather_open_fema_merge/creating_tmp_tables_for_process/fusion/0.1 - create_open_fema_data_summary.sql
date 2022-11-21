@@ -244,17 +244,8 @@ with pa_data as (
                            ihp_verified_loss > 0 OR project_amount > 0 OR sba_loss > 0 OR total_amount_paid > 0  OR crop_loss > 0
                    )
 
-        GROUP BY 1, 2, 3
-    )
-	
-select * /*into open_fema_data.tmp_disaster_loss_summary*/ from disaster_declarations_summary
-where not (disaster_number::integer >= 3000  and disaster_number::integer <= 3999)
+         GROUP BY 1, 2, 3
+     )
 
-
--- =======
---          GROUP BY 1, 2, 3
---      )
-
--- select * into  open_fema_data.tmp_disaster_loss_summary_v2 from disaster_declarations_summary
--- >>>>>>> ab76a643207b66f941193fa5bc26d8bc17b85b89
+select * into  open_fema_data.tmp_disaster_loss_summary_v2 from disaster_declarations_summary
 
