@@ -1,21 +1,17 @@
 with per_basis_summary as (
-SELECT nri_category, count(1),  
-    sum(
-        case 
-            when coalesce(swd_property_damage,0) + coalesce(swd_crop_damage,0) + coalesce(fatalities_dollar_value) > 0 then 1
-            else 0
-        end
-    ) as swd_events,
---     sum(
---         case 
---             when coalesce(fema_property_damage,0) + coalesce(fema_crop_damage,0) > 0 then 1
---             else 0
---         end
---     ) as fema_events,
-    sum(swd_property_damage) as per_basis_property,
-    sum(swd_crop_damage) as per_basis_crop
-    FROM public.tmp_hlr_normalised_metric_grid
-    group by 1
+	select nri_category, 
+		sum(case when ctype = 'buildings' then 1 else 0 end) as num_b,
+		sum(case when ctype = 'buildings' and damage > 0 then 1 else 0 end) as num_b_nonzero,	
+		sum(case when ctype = 'population' then 1 else 0 end) as num_p,
+		sum(case when ctype = 'population' and damage > 0 then 1 else 0 end) as num_p_nonzero,
+		sum(case when ctype = 'crop' then 1 else 0 end) as num_c,
+	    sum(case when ctype = 'crop' and damage > 0 then 1 else 0 end) as num_c_nonzero,
+		sum(case when ctype = 'buildings' then damage else 0 end) as loss_b,
+		sum(case when ctype = 'population' then damage else 0 end) as loss_pe,
+		sum(case when ctype = 'crop' then damage else 0 end) as loss_c,
+		round((sum(case when ctype = 'population' then damage else 0 end)/7600000)::numeric,1) as loss_p
+	from public.tmp_pb_normalised_pop_v2
+	group by 1
 ),
 swd_summary as (
 SELECT  nri_category, count(1),  
@@ -191,7 +187,7 @@ hlr_summary as (
                       WHEN nri_category IN ('volcano') and ctype = 'population'
                           THEN hlr * VLCN_EXPPE  * VLCN_AFREQ
                   END) swd_pop
-FROM public.tmp_hlr_normalised_metric_grid
+FROM public.tmp_hlr_normalised_pop_v2
          JOIN national_risk_index.nri_counties_november_2021
               ON geoid = stcofips
 GROUP BY nri_category

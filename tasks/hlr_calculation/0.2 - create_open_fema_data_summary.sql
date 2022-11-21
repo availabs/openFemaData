@@ -241,5 +241,6 @@ with pa_data as (
         GROUP BY 1, 2, 3
     )
 	
-select * into  open_fema_data.tmp_disaster_loss_summary from disaster_declarations_summary
+select * into open_fema_data.tmp_disaster_loss_summary from disaster_declarations_summary
+where not (disaster_number::integer >= 3000  and disaster_number::integer <= 3999)
 
